@@ -10,7 +10,8 @@
       "Bash(npm run typecheck:*)",
       "Bash(pnpm list:*)",
       "Bash(npx eslint:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(pnpm install:*)"
     ],
     "deny": [],
     "ask": []
