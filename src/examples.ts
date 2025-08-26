@@ -233,7 +233,11 @@ export function advancedExamples(): void {
 
   // Multiple array conditions
   const computerOrders = new SafeSift<Order>({
-    'items.tags': 'computer'
+    items: { 
+      $elemMatch: { 
+        tags: { $in: ['computer'] } 
+      } 
+    }
   }).filter(orders);
   console.log('Orders containing computer items:', computerOrders.length);
 }

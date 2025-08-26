@@ -128,7 +128,7 @@ describe('QueryBuilder', () => {
   describe('String operations', () => {
     test('should build regex query', () => {
       const result = query<User>()
-        .where('name').regex(/john/i)
+        .where('name').regex(/^John/i)
         .execute()
         .filter(testUsers);
       

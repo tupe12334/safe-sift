@@ -22,7 +22,6 @@ export class QueryBuilder<T> {
   }
 
   not(): QueryBuilder<T> {
-    const notQuery = new QueryBuilder<T>();
     const originalBuild = this.build.bind(this);
     
     this.build = () => {
@@ -44,9 +43,20 @@ export class QueryBuilder<T> {
   _addCondition(field: string, condition: any, logical?: 'and' | 'or'): void {
     if (logical === 'or') {
       if (!this.query.$or) {
-        this.query.$or = [];
+        // Convert existing query to OR format
+        const existingConditions = { ...this.query };
+        delete existingConditions.$or;
+        delete existingConditions.$and;
+        delete existingConditions.$not;
+        
+        this.query = { $or: [] } as SafeSiftQuery<T>;
+        
+        // Add existing conditions as the first OR clause
+        if (Object.keys(existingConditions).length > 0) {
+          this.query.$or!.push(existingConditions as SafeSiftQuery<T>);
+        }
       }
-      this.query.$or.push({ [field]: condition } as SafeSiftQuery<T>);
+      this.query.$or!.push({ [field]: condition } as SafeSiftQuery<T>);
     } else if (logical === 'and') {
       if (!this.query.$and) {
         this.query.$and = [];
