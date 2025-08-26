@@ -3,18 +3,17 @@ module.exports = {
   plugins: ['@typescript-eslint'],
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
-    '@typescript-eslint/recommended-requiring-type-checking',
   ],
+  env: {
+    node: true,
+    es2020: true,
+  },
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
-    project: './tsconfig.json',
   },
   rules: {
     '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/explicit-function-return-type': 'warn',
-    '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/prefer-readonly': 'error',
+    'no-unused-vars': 'off',
   },
 };

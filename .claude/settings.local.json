@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "Bash(npm test)",
+      "Bash(npm run build:*)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm test:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run typecheck:*)",
+      "Bash(pnpm list:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

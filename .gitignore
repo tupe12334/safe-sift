@@ -36,3 +36,5 @@ pids
 # Temp directories
 .tmp
 .temp
+
+.env
