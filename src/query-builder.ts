@@ -7,6 +7,7 @@ export class QueryBuilder<T> {
   private query: SafeSiftQuery<T> = {};
   private currentField: string | null = null;
   private pendingCondition: 'and' | 'or' | null = null;
+  private originalBuild: (() => SafeSiftQuery<T>) | null = null;
 
   where<K extends DeepKeyOf<T>>(field: K): FieldBuilder<T, K> {
     this.currentField = field;
@@ -22,12 +23,14 @@ export class QueryBuilder<T> {
   }
 
   not(): QueryBuilder<T> {
-    const originalBuild = this.build.bind(this);
-    
-    this.build = () => {
-      const query = originalBuild();
-      return { $not: query } as SafeSiftQuery<T>;
-    };
+    if (!this.originalBuild) {
+      this.originalBuild = this.build.bind(this);
+      
+      this.build = () => {
+        const query = this.originalBuild!();
+        return { $not: query } as SafeSiftQuery<T>;
+      };
+    }
     
     return this;
   }
@@ -38,6 +41,50 @@ export class QueryBuilder<T> {
 
   execute(): SafeSift<T> {
     return new SafeSift(this.build());
+  }
+
+  clear(): QueryBuilder<T> {
+    this.query = {};
+    return this;
+  }
+
+  removeField<K extends DeepKeyOf<T>>(field: K): QueryBuilder<T> {
+    delete (this.query as any)[field];
+    return this;
+  }
+
+  removeOr(): QueryBuilder<T> {
+    if (this.query.$or) {
+      delete this.query.$or;
+    }
+    return this;
+  }
+
+  removeAnd(): QueryBuilder<T> {
+    if (this.query.$and) {
+      delete this.query.$and;
+    }
+    return this;
+  }
+
+  removeNot(): QueryBuilder<T> {
+    if (this.originalBuild) {
+      this.build = this.originalBuild;
+      this.originalBuild = null;
+    }
+    return this;
+  }
+
+  removeLogical(): QueryBuilder<T> {
+    delete this.query.$or;
+    delete this.query.$and;
+    delete this.query.$not;
+    // Also remove NOT by restoring original build method
+    if (this.originalBuild) {
+      this.build = this.originalBuild;
+      this.originalBuild = null;
+    }
+    return this;
   }
 
   _addCondition(field: string, condition: any, logical?: 'and' | 'or'): void {

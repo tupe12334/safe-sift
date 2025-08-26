@@ -348,4 +348,116 @@ describe('QueryBuilder', () => {
       });
     });
   });
+
+  describe('Removal operations', () => {
+    test('should clear all conditions', () => {
+      const builder = query<User>()
+        .where('age').equals(30)
+        .or('name').equals('John')
+        .clear();
+      
+      const builtQuery = builder.build();
+      expect(Object.keys(builtQuery)).toHaveLength(0);
+    });
+
+    test('should remove specific field', () => {
+      const builder = query<User>()
+        .where('age').equals(30)
+        .and('name').equals('John');
+      
+      let builtQuery = builder.build();
+      expect(builtQuery).toHaveProperty('age');
+      expect(builtQuery.$and).toHaveLength(1);
+      
+      builder.removeField('age');
+      builtQuery = builder.build();
+      expect(builtQuery).not.toHaveProperty('age');
+      expect(builtQuery.$and).toHaveLength(1);
+    });
+
+    test('should remove OR conditions', () => {
+      const builder = query<User>()
+        .where('age').equals(30)
+        .or('name').equals('John');
+      
+      let builtQuery = builder.build();
+      expect(builtQuery).toHaveProperty('$or');
+      
+      builder.removeOr();
+      builtQuery = builder.build();
+      expect(builtQuery).not.toHaveProperty('$or');
+    });
+
+    test('should remove AND conditions', () => {
+      const builder = query<User>()
+        .where('age').equals(30)
+        .and('name').equals('John');
+      
+      let builtQuery = builder.build();
+      expect(builtQuery).toHaveProperty('$and');
+      
+      builder.removeAnd();
+      builtQuery = builder.build();
+      expect(builtQuery).not.toHaveProperty('$and');
+    });
+
+    test('should remove NOT conditions', () => {
+      const builder = query<User>()
+        .where('age').equals(30)
+        .not();
+      
+      let builtQuery = builder.build();
+      expect(builtQuery).toHaveProperty('$not');
+      
+      builder.removeNot();
+      builtQuery = builder.build();
+      expect(builtQuery).not.toHaveProperty('$not');
+    });
+
+    test('should remove all logical operators', () => {
+      const builder = query<User>()
+        .where('age').equals(30)
+        .or('name').equals('John')
+        .and('isActive').equals(true)
+        .not();
+      
+      let builtQuery = builder.build();
+      expect(builtQuery).toHaveProperty('$not');
+      
+      builder.removeLogical();
+      builtQuery = builder.build();
+      expect(builtQuery).not.toHaveProperty('$or');
+      expect(builtQuery).not.toHaveProperty('$and');
+      expect(builtQuery).not.toHaveProperty('$not');
+    });
+
+    test('should chain removal operations', () => {
+      const builder = query<User>()
+        .where('age').equals(30)
+        .or('name').equals('John');
+      
+      // Initially has OR
+      let builtQuery = builder.build();
+      expect(builtQuery).toHaveProperty('$or');
+      
+      // Remove OR and add new condition
+      builder.removeOr().and('isActive').equals(true);
+      
+      builtQuery = builder.build();
+      expect(builtQuery).not.toHaveProperty('$or');
+      expect(builtQuery).toHaveProperty('$and');
+    });
+
+    test('should handle removal on empty query', () => {
+      const builder = query<User>()
+        .clear()
+        .removeField('age')
+        .removeOr()
+        .removeAnd()
+        .removeNot();
+      
+      const builtQuery = builder.build();
+      expect(Object.keys(builtQuery)).toHaveLength(0);
+    });
+  });
 });
