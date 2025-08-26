@@ -1,0 +1,45 @@
+{
+  "name": "safe-sift",
+  "version": "1.0.0",
+  "description": "Type-safe wrapper for sift.js providing compile-time query validation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "sift",
+    "mongodb",
+    "query",
+    "typescript",
+    "type-safe",
+    "filter"
+  ],
+  "author": "tupe12334",
+  "license": "MIT",
+  "dependencies": {
+    "sift": "^17.1.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.5",
+    "@types/node": "^20.6.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "eslint": "^8.49.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tupe12334/safe-sift"
+  }
+}
