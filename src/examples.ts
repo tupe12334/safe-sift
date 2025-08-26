@@ -72,7 +72,7 @@ export function basicExamples(): void {
   console.log('Users named John:', johnUsers.filter(users));
 
   // Array operations
-  const developers = new SafeSift<User>({ tags: { $in: ['developer'] } }).filter(users);
+  const developers = new SafeSift<User>({ tags: 'developer' }).filter(users);
   console.log('Developers:', developers.length);
 }
 
@@ -105,8 +105,8 @@ export function logicalExamples(): void {
   // OR operation
   const adminOrManager = new SafeSift<User>({
     $or: [
-      { tags: { $in: ['admin'] } },
-      { tags: { $in: ['manager'] } }
+      { tags: 'admin' },
+      { tags: 'manager' }
     ]
   }).filter(users);
   console.log('Admins or managers:', adminOrManager.length);
@@ -233,7 +233,7 @@ export function advancedExamples(): void {
 
   // Multiple array conditions
   const computerOrders = new SafeSift<Order>({
-    'items.tags': { $in: ['computer'] }
+    'items.tags': 'computer'
   }).filter(orders);
   console.log('Orders containing computer items:', computerOrders.length);
 }

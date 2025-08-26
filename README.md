@@ -18,6 +18,41 @@ npm install safe-sift sift
 
 ## Usage
 
+### Fluent Builder Pattern (Recommended)
+
+```typescript
+import { query } from 'safe-sift';
+
+interface User {
+  id: number;
+  name: string;
+  age: number;
+  isActive: boolean;
+  tags: string[];
+  profile: {
+    location: string;
+    preferences: { theme: 'light' | 'dark' };
+  };
+}
+
+const users: User[] = [/* ... */];
+
+// Fluent, type-safe query building
+const result = query<User>()
+  .where('isActive').equals(true)
+  .and('age').between(25, 40)
+  .and('tags').contains('developer')
+  .and('profile.preferences.theme').equals('dark')
+  .execute()
+  .filter(users);
+
+// Or build query object for later use
+const queryObj = query<User>()
+  .where('name').regex(/john/i)
+  .or('email').matches(/@company\.com$/)
+  .build(); // Returns SafeSiftQuery<User>
+```
+
 ### Basic Example
 
 ```typescript
@@ -121,6 +156,62 @@ const complexQuery = new SafeSift<User>({
 });
 ```
 
+### Builder Pattern Methods
+
+#### QueryBuilder
+
+```typescript
+// Start building a query
+query<T>(): QueryBuilder<T>
+
+// Field selection
+where<K extends DeepKeyOf<T>>(field: K): FieldBuilder<T, K>
+and<K extends DeepKeyOf<T>>(field: K): FieldBuilder<T, K>
+or<K extends DeepKeyOf<T>>(field: K): FieldBuilder<T, K>
+not(): QueryBuilder<T>
+
+// Finalization
+build(): SafeSiftQuery<T>
+execute(): SafeSift<T>
+```
+
+#### FieldBuilder Operations
+
+```typescript
+// Equality
+equals(value): QueryBuilder<T>
+eq(value): QueryBuilder<T>
+notEquals(value): QueryBuilder<T>
+ne(value): QueryBuilder<T>
+
+// Comparisons (numbers, strings, dates)
+greaterThan(value): QueryBuilder<T>
+gt(value): QueryBuilder<T>
+greaterThanOrEqual(value): QueryBuilder<T>
+gte(value): QueryBuilder<T>
+lessThan(value): QueryBuilder<T>
+lt(value): QueryBuilder<T>
+lessThanOrEqual(value): QueryBuilder<T>
+lte(value): QueryBuilder<T>
+between(min, max): QueryBuilder<T>
+
+// Arrays and collections
+in(values): QueryBuilder<T>
+notIn(values): QueryBuilder<T>
+nin(values): QueryBuilder<T>
+contains(value): QueryBuilder<T>  // Array element matching
+all(values): QueryBuilder<T>      // Array contains all
+size(value): QueryBuilder<T>      // Array size
+elemMatch(query): QueryBuilder<T> // Array element query
+
+// String operations
+regex(pattern): QueryBuilder<T>
+matches(pattern): QueryBuilder<T>
+
+// Existence
+exists(value?): QueryBuilder<T>
+```
+
 ## API Reference
 
 ### SafeSift Class
@@ -142,6 +233,9 @@ class SafeSift<T> {
 ### Factory Functions
 
 ```typescript
+// Fluent query builder (recommended)
+function query<T>(): QueryBuilder<T>
+
 // Create SafeSift instance
 function createQuery<T>(query: SafeSiftQuery<T>): SafeSift<T>
 
@@ -194,30 +288,31 @@ interface User {
   tags: string[];
 }
 
-// ❌ Compile-time errors
+// ❌ Compile-time errors with traditional approach
 new SafeSift<User>({ 
   invalidField: 'value'           // Property doesn't exist
 });
 
-new SafeSift<User>({ 
-  age: { $regex: /pattern/ }      // Wrong operator for number field
-});
+// ❌ These would be caught at compile time
+query<User>()
+  .where('invalidField')          // ❌ Property doesn't exist
+  .where('age').regex(/pattern/)  // ❌ Wrong operator for number
+  .where('name').size(5)          // ❌ $size only works on arrays
 
-new SafeSift<User>({ 
-  name: { $size: 5 }             // $size only works on arrays
-});
-
-new SafeSift<User>({ 
-  'nested.invalid': 'value'       // Invalid nested path
-});
-
-// ✅ Valid queries
-new SafeSift<User>({ 
-  name: { $regex: /john/i },      // Correct operator for string
-  age: { $gte: 18 },              // Correct operator for number
-  tags: { $size: 3 }              // Correct operator for array
-});
+// ✅ Fluent builder with full type safety
+query<User>()
+  .where('name').regex(/john/i)           // ✅ String regex
+  .and('age').between(18, 65)             // ✅ Number range  
+  .and('tags').contains('developer')      // ✅ Array contains
+  .and('tags').size(3)                    // ✅ Array size
 ```
+
+### Builder Pattern Benefits
+
+- **IntelliSense**: Full autocompletion for field names and operations
+- **Method Chaining**: Readable, fluent API similar to popular libraries
+- **Type Safety**: Compile-time validation of all operations
+- **Flexibility**: Build queries step by step or all at once
 
 ## Examples
 

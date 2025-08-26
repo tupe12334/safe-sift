@@ -1,0 +1,21 @@
+# Source files
+src/
+__tests__/
+
+# Config files
+.eslintrc.js
+jest.config.js
+tsconfig.json
+.release-it.json
+
+# Development files
+.git/
+.github/
+node_modules/
+pnpm-lock.yaml
+
+# Other
+*.log
+.DS_Store
+coverage/
+.nyc_output/

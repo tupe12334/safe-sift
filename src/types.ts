@@ -31,8 +31,8 @@ export type ComparisonOperators<T> = {
   $gte?: T extends string | number | Date ? T : never;
   $lt?: T extends string | number | Date ? T : never;
   $lte?: T extends string | number | Date ? T : never;
-  $in?: T[];
-  $nin?: T[];
+  $in?: T extends ReadonlyArray<infer U> ? U[] : T[];
+  $nin?: T extends ReadonlyArray<infer U> ? U[] : T[];
   $regex?: T extends string ? RegExp | string : never;
   $options?: T extends string ? string : never;
   $exists?: boolean;
