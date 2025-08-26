@@ -3,7 +3,8 @@
     "commitMessage": "chore: release v${version}",
     "tag": true,
     "push": true,
-    "requireUpstream": false
+    "requireUpstream": false,
+    "requireCleanWorkingDir": false
   },
   "github": {
     "release": true,
@@ -22,5 +23,6 @@
   "hooks": {
     "before:init": ["pnpm run lint", "pnpm run typecheck", "pnpm test"],
     "after:bump": "pnpm run build"
-  }
+  },
+  "ci": true
 }
