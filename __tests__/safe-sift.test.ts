@@ -1,3 +1,4 @@
+import { describe, test, expect } from 'vitest';
 import { SafeSift, createQuery, safeSift } from '../src/index';
 
 interface User {
