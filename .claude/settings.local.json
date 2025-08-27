@@ -12,7 +12,9 @@
       "Bash(npx eslint:*)",
       "Bash(git add:*)",
       "Bash(pnpm install:*)",
-      "Bash(npm whoami:*)"
+      "Bash(npm whoami:*)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
