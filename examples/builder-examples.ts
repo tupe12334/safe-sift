@@ -26,7 +26,7 @@
  * ```
  */
 
-import { query } from './index';
+import { query } from '../src/index';
 
 /**
  * Example user interface demonstrating complex nested object structures
