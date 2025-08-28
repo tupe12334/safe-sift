@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { SafeSift, createQuery, safeSift } from '../src/index';
+import { SafeSift, createQuery, safeSift, query } from '../src/index';
 
 interface User {
   id: number;
@@ -267,5 +267,34 @@ describe('Type safety', () => {
     validQueries.forEach(query => {
       expect(query).toBeInstanceOf(SafeSift);
     });
+  });
+
+  test('should work with generic functions and type constraints', () => {
+    // Test the specific use case: generic function with type constraint
+    type A = { type: string };
+
+    const func = <T extends A>(array: T[]): T[] => {
+      return query<T>().where('type').equals('test').execute().filter(array);
+    };
+
+    // Test with concrete type that extends A
+    interface TestItem extends A {
+      type: string;
+      name: string;
+      value: number;
+    }
+
+    const testData: TestItem[] = [
+      { type: 'test', name: 'item1', value: 10 },
+      { type: 'other', name: 'item2', value: 20 },
+      { type: 'test', name: 'item3', value: 30 },
+    ];
+
+    const result = func(testData);
+    
+    expect(result).toHaveLength(2);
+    expect(result.every(item => item.type === 'test')).toBe(true);
+    expect(result[0]?.name).toBe('item1');
+    expect(result[1]?.name).toBe('item3');
   });
 });
