@@ -1,4 +1,4 @@
-import { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "@types";
+import { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "./types";
 import { SafeSift } from "./safe-sift";
 
 /**
@@ -20,16 +20,9 @@ import { SafeSift } from "./safe-sift";
  * type AgeType = PathValue<User, 'profile.age'>; // number
  * ```
  */
-// Helper type to detect if T is a generic/unconstrained type
-type IsGeneric<T> = [T] extends [Record<PropertyKey, unknown>] ? false : true;
-
-type PathValue<T, K extends string> = K extends keyof T
-  ? T[K]
-  : K extends DeepKeyOf<T>
+type PathValue<T, K extends string> = K extends DeepKeyOf<T>
   ? DeepValueOf<T, K>
-  : IsGeneric<T> extends true
-  ? any
-  : never; // Error for concrete types with invalid paths
+  : never;
 
 /**
  * A fluent query builder that constructs type-safe queries for filtering objects and arrays.
