@@ -14,7 +14,10 @@
       "Bash(pnpm install:*)",
       "Bash(npm whoami:*)",
       "Bash(node:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(tree:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []
