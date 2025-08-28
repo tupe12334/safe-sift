@@ -1,12 +1,12 @@
-import { SafeSiftQuery, DeepKeyOf, DeepValueOf } from './types';
-import { SafeSift } from './safe-sift';
+import { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "./types";
+import { SafeSift } from "./safe-sift";
 
 /**
  * Utility type that extracts the value type at a given path within an object.
- * 
+ *
  * @template T - The object type to extract the value from
  * @template K - The path string to the desired value
- * 
+ *
  * @example
  * ```typescript
  * interface User {
@@ -15,19 +15,29 @@ import { SafeSift } from './safe-sift';
  *     age: number;
  *   }
  * }
- * 
+ *
  * type NameType = PathValue<User, 'profile.name'>; // string
  * type AgeType = PathValue<User, 'profile.age'>; // number
  * ```
  */
-type PathValue<T, K extends string> = K extends DeepKeyOf<T> ? DeepValueOf<T, K> : never;
+// Helper type to detect if T is a generic/unconstrained type
+type IsGeneric<T> = [T] extends [Record<PropertyKey, unknown>] ? false : true;
+
+type PathValue<T, K extends string> = 
+  K extends keyof T 
+    ? T[K]
+    : K extends DeepKeyOf<T>
+      ? DeepValueOf<T, K>
+      : IsGeneric<T> extends true
+        ? any  // For generic types, allow any value
+        : never; // Error for concrete types with invalid paths
 
 /**
  * A fluent query builder that constructs type-safe queries for filtering objects and arrays.
  * Uses the builder pattern to create complex queries with logical operators and field conditions.
- * 
+ *
  * @template T - The type of objects to be queried
- * 
+ *
  * @example
  * ```typescript
  * interface User {
@@ -38,19 +48,19 @@ type PathValue<T, K extends string> = K extends DeepKeyOf<T> ? DeepValueOf<T, K>
  *     tags: string[];
  *   }
  * }
- * 
+ *
  * // Simple equality query
  * const query1 = new QueryBuilder<User>()
  *   .where('name').equals('John')
  *   .build();
- * 
+ *
  * // Complex query with logical operators
  * const query2 = new QueryBuilder<User>()
  *   .where('age').greaterThan(18)
  *   .and('profile.active').equals(true)
  *   .or('profile.tags').contains('admin')
  *   .build();
- * 
+ *
  * // Negated query
  * const query3 = new QueryBuilder<User>()
  *   .where('name').equals('Jane')
@@ -61,26 +71,26 @@ type PathValue<T, K extends string> = K extends DeepKeyOf<T> ? DeepValueOf<T, K>
 export class QueryBuilder<T> {
   private query: SafeSiftQuery<T> = {};
   private currentField: string | null = null;
-  private pendingCondition: 'and' | 'or' | null = null;
+  private pendingCondition: "and" | "or" | null = null;
   private originalBuild: (() => SafeSiftQuery<T>) | null = null;
 
   /**
    * Starts a new field condition query. This is typically the first method called when building a query.
-   * 
+   *
    * @param field - The field path to query (supports nested paths with dot notation)
    * @returns A FieldBuilder instance for adding conditions to the specified field
-   * 
+   *
    * @example
    * ```typescript
    * interface User {
    *   name: string;
    *   profile: { age: number };
    * }
-   * 
+   *
    * const query = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .build();
-   * 
+   *
    * // Nested field query
    * const nestedQuery = new QueryBuilder<User>()
    *   .where('profile.age').greaterThan(21)
@@ -95,17 +105,17 @@ export class QueryBuilder<T> {
   /**
    * Adds an AND condition to the query for the specified field.
    * Creates a logical AND relationship with existing conditions.
-   * 
+   *
    * @param field - The field path to query (supports nested paths with dot notation)
    * @returns A FieldBuilder instance for adding conditions to the specified field
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .and('age').greaterThan(18)
    *   .build();
-   * 
+   *
    * // Results in: { name: 'John', $and: [{ age: { $gt: 18 } }] }
    * ```
    */
@@ -116,17 +126,17 @@ export class QueryBuilder<T> {
   /**
    * Adds an OR condition to the query for the specified field.
    * Creates a logical OR relationship with existing conditions.
-   * 
+   *
    * @param field - The field path to query (supports nested paths with dot notation)
    * @returns A FieldBuilder instance for adding conditions to the specified field
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .or('name').equals('Jane')
    *   .build();
-   * 
+   *
    * // Results in: { $or: [{ name: 'John' }, { name: 'Jane' }] }
    * ```
    */
@@ -137,16 +147,16 @@ export class QueryBuilder<T> {
   /**
    * Negates the entire query by wrapping it in a $not operator.
    * This method modifies the build behavior to return the negated query.
-   * 
+   *
    * @returns This QueryBuilder instance for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .not()
    *   .build();
-   * 
+   *
    * // Results in: { $not: { name: 'John' } }
    * // Matches all users whose name is NOT 'John'
    * ```
@@ -167,16 +177,16 @@ export class QueryBuilder<T> {
   /**
    * Compiles and returns the constructed query object.
    * This method finalizes the query building process and returns the SafeSiftQuery.
-   * 
+   *
    * @returns The compiled SafeSiftQuery object ready for use with SafeSift
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('age').greaterThan(18)
    *   .and('active').equals(true)
    *   .build();
-   * 
+   *
    * console.log(query); // { age: { $gt: 18 }, $and: [{ active: true }] }
    * ```
    */
@@ -187,21 +197,21 @@ export class QueryBuilder<T> {
   /**
    * Builds the query and immediately returns a SafeSift instance for executing operations.
    * This is a convenience method that combines build() and new SafeSift().
-   * 
+   *
    * @returns A SafeSift instance ready to filter, find, or test objects
-   * 
+   *
    * @example
    * ```typescript
    * const users = [
    *   { name: 'John', age: 25 },
    *   { name: 'Jane', age: 30 }
    * ];
-   * 
+   *
    * const filtered = new QueryBuilder<User>()
    *   .where('age').greaterThan(20)
    *   .execute()
    *   .filter(users);
-   * 
+   *
    * console.log(filtered); // [{ name: 'John', age: 25 }, { name: 'Jane', age: 30 }]
    * ```
    */
@@ -211,17 +221,17 @@ export class QueryBuilder<T> {
 
   /**
    * Clears all conditions from the query, resetting it to an empty state.
-   * 
+   *
    * @returns This QueryBuilder instance for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const builder = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .and('age').greaterThan(18);
-   * 
+   *
    * builder.clear(); // Query is now empty: {}
-   * 
+   *
    * builder.where('status').equals('active'); // Start fresh
    * ```
    */
@@ -232,17 +242,17 @@ export class QueryBuilder<T> {
 
   /**
    * Removes a specific field condition from the query.
-   * 
+   *
    * @param field - The field path to remove from the query
    * @returns This QueryBuilder instance for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const builder = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .and('age').greaterThan(18)
    *   .removeField('age'); // Removes age condition
-   * 
+   *
    * // Query now only contains: { name: 'John' }
    * ```
    */
@@ -958,10 +968,10 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 /**
  * Factory function that creates a new QueryBuilder instance.
  * This is the main entry point for building type-safe queries.
- * 
+ *
  * @template T - The type of objects to be queried
  * @returns A new QueryBuilder instance for type T
- * 
+ *
  * @example
  * ```typescript
  * interface User {
@@ -972,30 +982,30 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
  *     tags: string[];
  *   }
  * }
- * 
+ *
  * // Create a simple query
  * const simpleQuery = query<User>()
  *   .where('name').equals('John')
  *   .build();
- * 
+ *
  * // Create a complex query with multiple conditions
  * const complexQuery = query<User>()
  *   .where('age').greaterThan(18)
  *   .and('profile.active').equals(true)
  *   .or('profile.tags').contains('admin')
  *   .build();
- * 
+ *
  * // Use with SafeSift for filtering
  * const users = [
  *   { name: 'John', age: 25, profile: { active: true, tags: ['user'] } },
  *   { name: 'Jane', age: 30, profile: { active: true, tags: ['admin'] } }
  * ];
- * 
+ *
  * const filtered = query<User>()
  *   .where('profile.tags').contains('admin')
  *   .execute()
  *   .filter(users);
- * 
+ *
  * console.log(filtered); // [{ name: 'Jane', age: 30, profile: { active: true, tags: ['admin'] } }]
  * ```
  */

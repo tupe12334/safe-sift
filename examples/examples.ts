@@ -32,7 +32,7 @@
  * ```
  */
 
-import { SafeSift, safeSift, createQuery } from './index';
+import { SafeSift, safeSift, createQuery } from '../src/index';
 
 /**
  * User interface for demonstrating SafeSift functionality.
