@@ -79,4 +79,12 @@ export { QueryBuilder, FieldBuilder, query } from "./query-builder";
 // Type definitions for type-safe queries
 export type { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "@types";
 
-export * from "./getValue";
+export {
+  getFilterOps,
+  getFilterValue,
+  bagFromPreds,
+  isOperatorKey,
+  mergeOpsBags,
+  normalizeEquality,
+  normalizeQuery,
+} from "./getValue";
