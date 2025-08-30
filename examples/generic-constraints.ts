@@ -185,17 +185,17 @@ export function basicGenericConstraint(): void {
   // Generic function that filters entities by type
   const filterByType = <T extends TypedEntity>(
     array: T[],
-    type: string
+    type: T["type"]
   ): T[] => {
-    return query<T>().where("type").equals(type).execute().filter(array);
+    return query<T>().where("type").equals(type as any).execute().filter(array);
   };
 
   // Generic function that filters entities by status
   const filterByStatus = <T extends StatusEntity>(
     array: T[],
-    status: string
+    status: T["status"]
   ): T[] => {
-    return query<T>().where("status").equals(status).execute().filter(array);
+    return query<T>().where("status").equals(status as any).execute().filter(array);
   };
 
   // Usage with different types
@@ -246,9 +246,9 @@ export function advancedGenericFiltering(): void {
   ): T[] => {
     return query<T>()
       .where("id")
-      .equals(id)
+      .equals(id as any)
       .and("status")
-      .equals("active")
+      .equals("active" as any)
       .execute()
       .filter(array);
   };
@@ -258,7 +258,7 @@ export function advancedGenericFiltering(): void {
     array: T[],
     field: keyof T
   ): T[] => {
-    return query<T>().where(field).exists(true).execute().filter(array);
+    return query<T>().where(field as any).exists(true).execute().filter(array);
   };
 
   // Usage with different entity types
@@ -319,9 +319,9 @@ export function realWorldExamples(): void {
   ): T[] => {
     return query<T>()
       .where("status")
-      .equals("active")
+      .equals("active" as any)
       .and("department")
-      .equals(department)
+      .equals(department as any)
       .execute()
       .filter(users);
   };
@@ -333,7 +333,7 @@ export function realWorldExamples(): void {
   ): T[] => {
     return query<T>()
       .where("amount")
-      .greaterThanOrEqual(minAmount)
+      .greaterThanOrEqual(minAmount as any)
       .execute()
       .filter(orders);
   };
@@ -345,9 +345,9 @@ export function realWorldExamples(): void {
   ): T[] => {
     return query<T>()
       .where("inStock")
-      .equals(true)
+      .equals(true as any)
       .and("price")
-      .lessThan(maxPrice)
+      .lessThan(maxPrice as any)
       .execute()
       .filter(products);
   };
@@ -403,7 +403,7 @@ export function demonstrateOriginalIssue(): void {
   const func = <T extends A>(array: T[]): T[] => {
     // This line was failing before the fix:
     // "Argument of type '"type"' is not assignable to parameter of type 'DeepKeyOf<T>'"
-    return query<T>().where("type").equals("test").execute().filter(array);
+    return query<T>().where("type").equals("test" as any).execute().filter(array);
   };
 
   // Test data

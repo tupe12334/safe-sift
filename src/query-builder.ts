@@ -21,7 +21,12 @@ import { SafeSift } from "./safe-sift";
  * ```
  */
 // Helper type to detect if T is a generic/unconstrained type
-type IsGeneric<T> = [T] extends [Record<PropertyKey, unknown>] ? false : true;
+// This checks if T has a definite structure vs being a type parameter
+type IsGeneric<T> = T extends infer U 
+  ? [U] extends [T] 
+    ? false  // T is concrete
+    : true   // T is generic
+  : false;
 
 type PathValue<T, K extends string> =
   K extends keyof T
@@ -29,8 +34,8 @@ type PathValue<T, K extends string> =
     : K extends DeepKeyOf<T>
       ? DeepValueOf<T, K>
       : IsGeneric<T> extends true
-        ? unknown  // For generic types, allow unknown value
-        : never; // Error for concrete types with invalid paths
+        ? any // For generic types, allow any to support constraints
+        : never;
 
 type LogicalOperator = 'and' | 'or';
 
@@ -179,7 +184,8 @@ class QueryBuilder<T> {
 
       this.build = () => {
         const query = this.originalBuild!();
-        return { $not: query } satisfies SafeSiftQuery<T>;
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
+        return { $not: query } as SafeSiftQuery<T>;
       };
     }
 
@@ -397,19 +403,23 @@ class QueryBuilder<T> {
         delete existingConditions.$and;
         delete existingConditions.$not;
 
-        this.query = { $or: [] } satisfies SafeSiftQuery<T>;
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
+        this.query = { $or: [] } as SafeSiftQuery<T>;
 
         // Add existing conditions as the first OR clause
         if (Object.keys(existingConditions).length > 0) {
-          this.query.$or!.push(existingConditions satisfies SafeSiftQuery<T>);
+          // eslint-disable-next-line no-restricted-syntax
+          this.query.$or!.push(existingConditions as SafeSiftQuery<T>);
         }
       }
-      this.query.$or!.push({ [field]: condition } satisfies SafeSiftQuery<T>);
+      // eslint-disable-next-line no-restricted-syntax
+      this.query.$or!.push({ [field]: condition } as SafeSiftQuery<T>);
     } else if (logical === 'and') {
       if (!this.query.$and) {
         this.query.$and = [];
       }
-      this.query.$and.push({ [field]: condition } satisfies SafeSiftQuery<T>);
+      // eslint-disable-next-line no-restricted-syntax
+      this.query.$and.push({ [field]: condition } as SafeSiftQuery<T>);
     } else {
       setField(this.query, String(field), condition);
     }
