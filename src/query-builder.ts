@@ -23,14 +23,26 @@ import { SafeSift } from "./safe-sift";
 // Helper type to detect if T is a generic/unconstrained type
 type IsGeneric<T> = [T] extends [Record<PropertyKey, unknown>] ? false : true;
 
-type PathValue<T, K extends string> = 
-  K extends keyof T 
+type PathValue<T, K extends string> =
+  K extends keyof T
     ? T[K]
     : K extends DeepKeyOf<T>
       ? DeepValueOf<T, K>
       : IsGeneric<T> extends true
-        ? any  // For generic types, allow any value
+        ? unknown  // For generic types, allow unknown value
         : never; // Error for concrete types with invalid paths
+
+type LogicalOperator = 'and' | 'or';
+
+function deleteField<T>(query: SafeSiftQuery<T>, field: string): void {
+  const queryRecord: Record<string, unknown> = query;
+  delete queryRecord[field];
+}
+
+function setField<T>(query: SafeSiftQuery<T>, field: string, value: unknown): void {
+  const queryRecord: Record<string, unknown> = query;
+  queryRecord[field] = value;
+}
 
 /**
  * A fluent query builder that constructs type-safe queries for filtering objects and arrays.
@@ -68,10 +80,10 @@ type PathValue<T, K extends string> =
  *   .build();
  * ```
  */
-export class QueryBuilder<T> {
+class QueryBuilder<T> {
   private query: SafeSiftQuery<T> = {};
   private currentField: string | null = null;
-  private pendingCondition: "and" | "or" | null = null;
+  private pendingCondition: LogicalOperator | null = null;
   private originalBuild: (() => SafeSiftQuery<T>) | null = null;
 
   /**
@@ -164,13 +176,13 @@ export class QueryBuilder<T> {
   not(): QueryBuilder<T> {
     if (!this.originalBuild) {
       this.originalBuild = this.build.bind(this);
-      
+
       this.build = () => {
         const query = this.originalBuild!();
-        return { $not: query } as SafeSiftQuery<T>;
+        return { $not: query } satisfies SafeSiftQuery<T>;
       };
     }
-    
+
     return this;
   }
 
@@ -257,22 +269,22 @@ export class QueryBuilder<T> {
    * ```
    */
   removeField<K extends DeepKeyOf<T>>(field: K): QueryBuilder<T> {
-    delete (this.query as any)[field];
+    deleteField(this.query, String(field));
     return this;
   }
 
   /**
    * Removes all OR conditions from the query.
-   * 
+   *
    * @returns This QueryBuilder instance for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const builder = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .or('name').equals('Jane')
    *   .removeOr();
-   * 
+   *
    * // OR conditions are removed, other conditions remain
    * ```
    */
@@ -285,16 +297,16 @@ export class QueryBuilder<T> {
 
   /**
    * Removes all AND conditions from the query.
-   * 
+   *
    * @returns This QueryBuilder instance for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const builder = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .and('age').greaterThan(18)
    *   .removeAnd();
-   * 
+   *
    * // AND conditions are removed: { name: 'John' }
    * ```
    */
@@ -307,16 +319,16 @@ export class QueryBuilder<T> {
 
   /**
    * Removes the NOT negation from the query, restoring the original query structure.
-   * 
+   *
    * @returns This QueryBuilder instance for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const builder = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .not()
    *   .removeNot();
-   * 
+   *
    * // NOT negation removed, back to: { name: 'John' }
    * ```
    */
@@ -331,9 +343,9 @@ export class QueryBuilder<T> {
   /**
    * Removes all logical operators ($or, $and, $not) from the query.
    * This is a comprehensive method that cleans up all logical structuring.
-   * 
+   *
    * @returns This QueryBuilder instance for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const builder = new QueryBuilder<User>()
@@ -342,7 +354,7 @@ export class QueryBuilder<T> {
    *   .or('status').equals('admin')
    *   .not()
    *   .removeLogical();
-   * 
+   *
    * // All logical operators removed, only field conditions remain
    * ```
    */
@@ -361,13 +373,13 @@ export class QueryBuilder<T> {
   /**
    * Internal method that adds a condition to the query with optional logical grouping.
    * Handles the logic for combining conditions with AND/OR operators.
-   * 
+   *
    * @param field - The field name to add the condition for
    * @param condition - The condition object or value to apply
    * @param logical - Optional logical operator ('and' or 'or') for combining conditions
-   * 
+   *
    * @internal This method is for internal use by FieldBuilder instances
-   * 
+   *
    * @example
    * ```typescript
    * // Called internally by FieldBuilder methods:
@@ -376,7 +388,7 @@ export class QueryBuilder<T> {
    * builder._addCondition('status', 'active', 'or'); // OR condition
    * ```
    */
-  _addCondition(field: string, condition: any, logical?: 'and' | 'or'): void {
+  _addCondition(field: string, condition: unknown, logical?: LogicalOperator): void {
     if (logical === 'or') {
       if (!this.query.$or) {
         // Convert existing query to OR format
@@ -384,22 +396,22 @@ export class QueryBuilder<T> {
         delete existingConditions.$or;
         delete existingConditions.$and;
         delete existingConditions.$not;
-        
-        this.query = { $or: [] } as SafeSiftQuery<T>;
-        
+
+        this.query = { $or: [] } satisfies SafeSiftQuery<T>;
+
         // Add existing conditions as the first OR clause
         if (Object.keys(existingConditions).length > 0) {
-          this.query.$or!.push(existingConditions as SafeSiftQuery<T>);
+          this.query.$or!.push(existingConditions satisfies SafeSiftQuery<T>);
         }
       }
-      this.query.$or!.push({ [field]: condition } as SafeSiftQuery<T>);
+      this.query.$or!.push({ [field]: condition } satisfies SafeSiftQuery<T>);
     } else if (logical === 'and') {
       if (!this.query.$and) {
         this.query.$and = [];
       }
-      this.query.$and.push({ [field]: condition } as SafeSiftQuery<T>);
+      this.query.$and.push({ [field]: condition } satisfies SafeSiftQuery<T>);
     } else {
-      (this.query as any)[field] = condition;
+      setField(this.query, String(field), condition);
     }
   }
 }
@@ -407,10 +419,10 @@ export class QueryBuilder<T> {
 /**
  * A specialized builder for adding conditions to a specific field in a query.
  * Created by QueryBuilder methods (where, and, or) to provide field-specific query operations.
- * 
+ *
  * @template T - The type of objects being queried
  * @template K - The specific field path being queried (extends DeepKeyOf<T>)
- * 
+ *
  * @example
  * ```typescript
  * interface User {
@@ -418,13 +430,13 @@ export class QueryBuilder<T> {
  *   age: number;
  *   tags: string[];
  * }
- * 
+ *
  * // FieldBuilder is created by QueryBuilder.where()
  * const query = new QueryBuilder<User>()
  *   .where('name') // Returns FieldBuilder<User, 'name'>
  *   .equals('John') // FieldBuilder method
  *   .build();
- * 
+ *
  * // Chaining different field conditions
  * const complexQuery = new QueryBuilder<User>()
  *   .where('age').greaterThan(18)
@@ -432,10 +444,10 @@ export class QueryBuilder<T> {
  *   .build();
  * ```
  */
-export class FieldBuilder<T, K extends DeepKeyOf<T>> {
+class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a new FieldBuilder instance for a specific field.
-   * 
+   *
    * @param builder - The QueryBuilder instance that created this FieldBuilder
    * @param field - The field path this builder will add conditions to
    * @param logical - Optional logical operator for combining this condition with others
@@ -443,34 +455,34 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   constructor(
     private builder: QueryBuilder<T>,
     private field: K,
-    private logical?: 'and' | 'or'
+    private logical?: LogicalOperator
   ) {}
 
   /**
    * Internal method that adds a condition for this field and returns the parent QueryBuilder.
-   * 
+   *
    * @param condition - The condition to apply to this field
    * @returns The parent QueryBuilder instance for continued chaining
-   * 
+   *
    * @internal
    */
-  private addCondition(condition: any): QueryBuilder<T> {
+  private addCondition(condition: unknown): QueryBuilder<T> {
     this.builder._addCondition(this.field, condition, this.logical);
     return this.builder;
   }
 
   /**
    * Creates an equality condition for this field (shorthand for exact match).
-   * 
+   *
    * @param value - The exact value to match against
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('name').equals('John')
    *   .build();
-   * 
+   *
    * // Results in: { name: 'John' }
    * ```
    */
@@ -480,16 +492,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates an explicit equality condition using the $eq operator.
-   * 
+   *
    * @param value - The exact value to match against
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('status').eq('active')
    *   .build();
-   * 
+   *
    * // Results in: { status: { $eq: 'active' } }
    * ```
    */
@@ -499,16 +511,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a not-equals condition for this field.
-   * 
+   *
    * @param value - The value that should NOT match
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('status').notEquals('deleted')
    *   .build();
-   * 
+   *
    * // Results in: { status: { $ne: 'deleted' } }
    * ```
    */
@@ -518,16 +530,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a not-equals condition for this field (alias for notEquals).
-   * 
+   *
    * @param value - The value that should NOT match
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('age').ne(0)
    *   .build();
-   * 
+   *
    * // Results in: { age: { $ne: 0 } }
    * ```
    */
@@ -537,23 +549,23 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a greater-than condition for comparable fields (string, number, Date).
-   * 
+   *
    * @param value - The value to compare against (field value must be greater than this)
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('age').greaterThan(18)
    *   .build();
-   * 
+   *
    * // Results in: { age: { $gt: 18 } }
-   * 
+   *
    * // Works with strings (alphabetical comparison)
    * const nameQuery = new QueryBuilder<User>()
    *   .where('name').greaterThan('M')
    *   .build();
-   * 
+   *
    * // Works with dates
    * const dateQuery = new QueryBuilder<Post>()
    *   .where('createdAt').greaterThan(new Date('2023-01-01'))
@@ -566,16 +578,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a greater-than condition (alias for greaterThan).
-   * 
+   *
    * @param value - The value to compare against
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('score').gt(100)
    *   .build();
-   * 
+   *
    * // Results in: { score: { $gt: 100 } }
    * ```
    */
@@ -585,16 +597,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a greater-than-or-equal condition for comparable fields.
-   * 
+   *
    * @param value - The value to compare against (field value must be >= this)
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('age').greaterThanOrEqual(21)
    *   .build();
-   * 
+   *
    * // Results in: { age: { $gte: 21 } }
    * ```
    */
@@ -604,16 +616,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a greater-than-or-equal condition (alias for greaterThanOrEqual).
-   * 
+   *
    * @param value - The value to compare against
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('rating').gte(4.5)
    *   .build();
-   * 
+   *
    * // Results in: { rating: { $gte: 4.5 } }
    * ```
    */
@@ -623,16 +635,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a less-than condition for comparable fields.
-   * 
+   *
    * @param value - The value to compare against (field value must be less than this)
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('age').lessThan(65)
    *   .build();
-   * 
+   *
    * // Results in: { age: { $lt: 65 } }
    * ```
    */
@@ -642,16 +654,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a less-than condition (alias for lessThan).
-   * 
+   *
    * @param value - The value to compare against
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('attempts').lt(3)
    *   .build();
-   * 
+   *
    * // Results in: { attempts: { $lt: 3 } }
    * ```
    */
@@ -661,16 +673,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a less-than-or-equal condition for comparable fields.
-   * 
+   *
    * @param value - The value to compare against (field value must be <= this)
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('age').lessThanOrEqual(35)
    *   .build();
-   * 
+   *
    * // Results in: { age: { $lte: 35 } }
    * ```
    */
@@ -680,16 +692,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a less-than-or-equal condition (alias for lessThanOrEqual).
-   * 
+   *
    * @param value - The value to compare against
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('priority').lte(5)
    *   .build();
-   * 
+   *
    * // Results in: { priority: { $lte: 5 } }
    * ```
    */
@@ -701,19 +713,19 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * Creates a condition that matches if the field value is included in the provided array.
    * For array fields, checks if the array contains any of the specified values.
    * For non-array fields, checks if the field value matches any value in the array.
-   * 
+   *
    * @param values - Array of values to match against
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * // For non-array fields
    * const query = new QueryBuilder<User>()
    *   .where('status').in(['active', 'pending'])
    *   .build();
-   * 
+   *
    * // Results in: { status: { $in: ['active', 'pending'] } }
-   * 
+   *
    * // For array fields - checks if the array contains any of these values
    * const tagQuery = new QueryBuilder<User>()
    *   .where('tags').in(['admin', 'moderator'])
@@ -727,16 +739,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a condition that matches if the field value is NOT included in the provided array.
    * Opposite of the `in` method.
-   * 
+   *
    * @param values - Array of values to exclude
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('status').notIn(['deleted', 'banned'])
    *   .build();
-   * 
+   *
    * // Results in: { status: { $nin: ['deleted', 'banned'] } }
    * ```
    */
@@ -747,16 +759,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a condition that matches if the field value is NOT included in the provided array.
    * Alias for `notIn`.
-   * 
+   *
    * @param values - Array of values to exclude
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('role').nin(['guest', 'temp'])
    *   .build();
-   * 
+   *
    * // Results in: { role: { $nin: ['guest', 'temp'] } }
    * ```
    */
@@ -767,16 +779,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a condition that matches if an array field contains the specified value.
    * Only works with array fields.
-   * 
+   *
    * @param value - The value that should be present in the array
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('tags').contains('admin')
    *   .build();
-   * 
+   *
    * // Results in: { tags: 'admin' }
    * // Matches users whose tags array includes 'admin'
    * ```
@@ -788,24 +800,24 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a condition that matches string fields against a regular expression pattern.
    * Only works with string fields.
-   * 
+   *
    * @param pattern - Regular expression pattern (RegExp object or string)
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('email').regex(/@gmail\.com$/)
    *   .build();
-   * 
+   *
    * // Results in: { email: { $regex: /@gmail\.com$/ } }
    * // Matches users with Gmail email addresses
-   * 
+   *
    * // Using string pattern
    * const nameQuery = new QueryBuilder<User>()
    *   .where('name').regex('^John')
    *   .build();
-   * 
+   *
    * // Results in: { name: { $regex: '^John' } }
    * // Matches users whose name starts with 'John'
    * ```
@@ -817,16 +829,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a condition that matches string fields against a regular expression pattern.
    * Alias for `regex` method. Only works with string fields.
-   * 
+   *
    * @param pattern - Regular expression pattern (RegExp object or string)
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('phone').matches(/^\+1\d{10}$/)
    *   .build();
-   * 
+   *
    * // Results in: { phone: { $regex: /^\+1\d{10}$/ } }
    * // Matches US phone numbers
    * ```
@@ -837,25 +849,25 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
 
   /**
    * Creates a condition that checks if a field exists (is not null or undefined).
-   * 
+   *
    * @param value - Whether the field should exist (default: true)
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * // Check if field exists
    * const query = new QueryBuilder<User>()
    *   .where('middleName').exists()
    *   .build();
-   * 
+   *
    * // Results in: { middleName: { $exists: true } }
    * // Matches users who have a middle name
-   * 
+   *
    * // Check if field does NOT exist
    * const noMiddleNameQuery = new QueryBuilder<User>()
    *   .where('middleName').exists(false)
    *   .build();
-   * 
+   *
    * // Results in: { middleName: { $exists: false } }
    * // Matches users who do NOT have a middle name
    * ```
@@ -867,16 +879,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a condition that matches arrays with a specific length.
    * Only works with array fields.
-   * 
+   *
    * @param value - The exact length the array should have
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('tags').size(3)
    *   .build();
-   * 
+   *
    * // Results in: { tags: { $size: 3 } }
    * // Matches users with exactly 3 tags
    * ```
@@ -889,16 +901,16 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * Creates a condition that matches arrays containing ALL of the specified values.
    * The array must contain every value in the provided array, but may contain additional values.
    * Only works with array fields.
-   * 
+   *
    * @param values - Array of values that must ALL be present in the field
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('tags').all(['admin', 'active'])
    *   .build();
-   * 
+   *
    * // Results in: { tags: { $all: ['admin', 'active'] } }
    * // Matches users whose tags array contains BOTH 'admin' AND 'active'
    * ```
@@ -910,20 +922,20 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a condition that matches arrays where at least one element matches the given query.
    * Useful for querying arrays of objects. Only works with array fields.
-   * 
+   *
    * @param query - A SafeSiftQuery to apply to each array element
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * interface User {
    *   orders: Array<{ status: string; amount: number }>;
    * }
-   * 
+   *
    * const query = new QueryBuilder<User>()
    *   .where('orders').elemMatch({ status: 'completed', amount: { $gt: 100 } })
    *   .build();
-   * 
+   *
    * // Results in: { orders: { $elemMatch: { status: 'completed', amount: { $gt: 100 } } } }
    * // Matches users who have at least one completed order over $100
    * ```
@@ -935,19 +947,19 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a range condition for comparable fields (between min and max, inclusive).
    * This is equivalent to combining greaterThanOrEqual(min) and lessThanOrEqual(max).
-   * 
+   *
    * @param min - The minimum value (inclusive)
    * @param max - The maximum value (inclusive)
    * @returns The parent QueryBuilder for method chaining
-   * 
+   *
    * @example
    * ```typescript
    * const query = new QueryBuilder<User>()
    *   .where('age').between(18, 65)
    *   .build();
-   * 
+   *
    * // Results in: { age: { $gte: 18, $lte: 65 } }
-   * 
+   *
    * // Works with dates for date ranges
    * const dateQuery = new QueryBuilder<Post>()
    *   .where('createdAt').between(
@@ -1009,6 +1021,8 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
  * console.log(filtered); // [{ name: 'Jane', age: 30, profile: { active: true, tags: ['admin'] } }]
  * ```
  */
-export function query<T>(): QueryBuilder<T> {
+function query<T>(): QueryBuilder<T> {
   return new QueryBuilder<T>();
 }
+
+export { QueryBuilder, FieldBuilder, query, type LogicalOperator };

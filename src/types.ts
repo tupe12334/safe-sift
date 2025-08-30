@@ -13,7 +13,7 @@
  * const undef: Primitive = undefined;
  * ```
  */
-export type Primitive = string | number | boolean | Date | null | undefined;
+type Primitive = string | number | boolean | Date | null | undefined;
 
 /**
  * Recursively extracts all possible dot-notation path strings for accessing nested properties in an object.
@@ -47,7 +47,7 @@ export type Primitive = string | number | boolean | Date | null | undefined;
  * const theme = getValue(user, "profile.settings.theme"); // string
  * ```
  */
-export type DeepKeyOf<T> = (keyof T & string) | (T extends Primitive
+type DeepKeyOf<T> = (keyof T & string) | (T extends Primitive
   ? never
   : T extends ReadonlyArray<infer U>
   ? DeepKeyOf<U>
@@ -96,7 +96,7 @@ export type DeepKeyOf<T> = (keyof T & string) | (T extends Primitive
  * }
  * ```
  */
-export type DeepValueOf<T, K extends string> = K extends keyof T
+type DeepValueOf<T, K extends string> = K extends keyof T
   ? T[K]
   : K extends `${infer P}.${infer S}`
   ? P extends keyof T
@@ -136,7 +136,7 @@ export type DeepValueOf<T, K extends string> = K extends keyof T
  * const existsQuery: ComparisonOperators<any> = { $exists: true };
  * ```
  */
-export type ComparisonOperators<T> = {
+type ComparisonOperators<T> = {
   /** Exact equality match */
   $eq?: T;
   /** Not equal to */
@@ -201,7 +201,7 @@ export type ComparisonOperators<T> = {
  * };
  * ```
  */
-export type LogicalOperators<T> = {
+type LogicalOperators<T> = {
   /** All conditions must match (logical AND) */
   $and?: SafeSiftQuery<T>[];
   /** Any condition can match (logical OR) */
@@ -239,7 +239,7 @@ export type LogicalOperators<T> = {
  * };
  * ```
  */
-export type ArrayOperators<T> = T extends ReadonlyArray<infer U>
+type ArrayOperators<T> = T extends ReadonlyArray<infer U>
   ? {
       /** All specified values must be present in the array */
       $all?: U[];
@@ -269,7 +269,7 @@ export type ArrayOperators<T> = T extends ReadonlyArray<infer U>
  * const elementQuery: FieldQuery<string[]> = "admin"; // matches arrays containing "admin"
  * ```
  */
-export type FieldQuery<T> =
+type FieldQuery<T> =
   | ComparisonOperators<T>
   | ArrayOperators<T>
   | T
@@ -328,8 +328,19 @@ export type FieldQuery<T> =
  * };
  * ```
  */
-export type SafeSiftQuery<T> = LogicalOperators<T> & {
+type SafeSiftQuery<T> = LogicalOperators<T> & {
   [K in keyof T]?: FieldQuery<T[K]>;
 } & {
   [K in DeepKeyOf<T>]?: FieldQuery<DeepValueOf<T, K>>;
+};
+
+export {
+  type Primitive,
+  type DeepKeyOf,
+  type DeepValueOf,
+  type ComparisonOperators,
+  type LogicalOperators,
+  type ArrayOperators,
+  type FieldQuery,
+  type SafeSiftQuery
 };
