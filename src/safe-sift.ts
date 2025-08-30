@@ -1,5 +1,5 @@
 import sift from "sift";
-import { SafeSiftQuery } from "./types";
+import { SafeSiftQuery } from "@types";
 
 /**
  * A type-safe wrapper around the sift library that provides MongoDB-style querying for JavaScript objects.

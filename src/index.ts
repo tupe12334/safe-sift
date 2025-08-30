@@ -77,4 +77,4 @@ export { SafeSift, createQuery, safeSift } from "./safe-sift";
 export { QueryBuilder, FieldBuilder, query } from "./query-builder";
 
 // Type definitions for type-safe queries
-export type { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "./types";
+export type { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "@types";
