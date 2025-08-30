@@ -6,4 +6,7 @@ export type {
   ArrayOperators,
   FieldQuery,
   SafeSiftQuery,
+  PathValue,
 } from "./queries";
+
+export * from "./model";
