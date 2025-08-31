@@ -20,7 +20,8 @@
       "Bash(npm test:*)",
       "Bash(pnpm lint:*)",
       "Bash(pnpm exec eslint:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(npm run release:ci:patch:*)"
     ],
     "deny": [],
     "ask": []
