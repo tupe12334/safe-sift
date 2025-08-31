@@ -1,0 +1,1 @@
+export type FindResult<T> = T | undefined;

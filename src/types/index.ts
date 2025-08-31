@@ -1,12 +1,13 @@
 export type { Primitive } from "./primitives";
-export type { DeepKeyOf, DeepValueOf } from "./deep";
-export type {
-  ComparisonOperators,
-  LogicalOperators,
-  ArrayOperators,
-  FieldQuery,
-  SafeSiftQuery,
-  PathValue,
-} from "./queries";
-
-export * from "./model";
+export type { DeepKeyOf } from "./deep-key-of";
+export type { DeepValueOf } from "./deep-value-of";
+export type { MqlOperator } from "./mql-operator";
+export type { Predicate } from "./predicate";
+export type { Disjunction } from "./disjunction";
+export type { Normalized } from "./normalized";
+export type { OpsBag } from "./ops-bag";
+export type { OrMode } from "./or-mode";
+export type { GetOptions } from "./get-options";
+export type { ComparisonOperators } from "./comparison-operators";
+export type { SafeSiftQuery } from "./safe-sift-query";
+export type { PathValue } from "./path-value";

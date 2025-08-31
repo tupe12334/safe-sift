@@ -21,7 +21,8 @@
       "Bash(pnpm lint:*)",
       "Bash(pnpm exec eslint:*)",
       "Bash(git stash:*)",
-      "Bash(npm run release:ci:patch:*)"
+      "Bash(npm run release:ci:patch:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

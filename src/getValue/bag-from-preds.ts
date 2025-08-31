@@ -12,23 +12,8 @@ import type { OpsBag, Predicate } from "@types";
  * // => { $gte: 18, $lte: 30 }
  * ```
  */
-function bagFromPreds(preds: Predicate[]): OpsBag {
+export function bagFromPreds(preds: Predicate[]): OpsBag {
   const bag: OpsBag = {};
   for (const p of preds) bag[p.op] = p.value;
   return bag;
 }
-
-/**
- * Merge multiple operator bags.
- *
- * @example
- * ```ts
- * mergeOpsBags({ $gte: 18 }, { $lte: 30 });
- * // => { $gte: 18, $lte: 30 }
- * ```
- */
-function mergeOpsBags(...bags: OpsBag[]): OpsBag {
-  return bags.reduce((acc, b) => Object.assign(acc, b), {});
-}
-
-export { bagFromPreds, mergeOpsBags };

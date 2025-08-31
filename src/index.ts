@@ -71,7 +71,12 @@
  */
 
 // Core query execution classes and functions
-export { SafeSift, createQuery, safeSift } from "./safe-sift";
+export { SafeSift } from "./safe-sift-class";
+export { createQuery } from "./create-query";
+export { safeSift } from "./safe-sift-function";
+export type { SiftParameters } from "./safe-sift-types";
+export type { FindResult } from "./find-result";
+export type { SafeSiftReturnType } from "./safe-sift-return-type";
 
 // Fluent query builder classes and functions
 export { QueryBuilder, FieldBuilder, query } from "./query-builder";
