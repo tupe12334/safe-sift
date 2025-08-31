@@ -1,6 +1,10 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable @typescript-eslint/consistent-type-assertions */
+/* eslint-disable import/group-exports */
+import { DeepKeyOf, PathValue, SafeSiftQuery } from "@types";
 import { SafeSift } from "./safe-sift";
-import { DeepKeyOf, PathValue, SafeSiftQuery } from "./types";
 
+type LogicalOperation = "and" | "or";
 /**
  * A fluent query builder that constructs type-safe queries for filtering objects and arrays.
  * Uses the builder pattern to create complex queries with logical operators and field conditions.
@@ -40,7 +44,7 @@ import { DeepKeyOf, PathValue, SafeSiftQuery } from "./types";
 export class QueryBuilder<T> {
   private query: SafeSiftQuery<T> = {};
   private currentField: string | null = null;
-  private pendingCondition: "and" | "or" | null = null;
+  private pendingCondition: LogicalOperation | null = null;
   private originalBuild: (() => SafeSiftQuery<T>) | null = null;
 
   /**
@@ -136,7 +140,10 @@ export class QueryBuilder<T> {
 
       this.build = () => {
         const query = this.originalBuild!();
-        return { $not: query } as SafeSiftQuery<T>;
+        const queryNot = { $not: query };
+
+        // eslint-disable-next-line no-restricted-syntax
+        return queryNot as SafeSiftQuery<T>;
       };
     }
 
@@ -226,7 +233,7 @@ export class QueryBuilder<T> {
    * ```
    */
   removeField<K extends DeepKeyOf<T>>(field: K): QueryBuilder<T> {
-    delete (this.query as any)[field];
+    delete this.query[field];
     return this;
   }
 
@@ -345,7 +352,12 @@ export class QueryBuilder<T> {
    * builder._addCondition('status', 'active', 'or'); // OR condition
    * ```
    */
-  _addCondition(field: string, condition: any, logical?: "and" | "or"): void {
+  _addCondition(
+    field: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    condition: any,
+    logical?: LogicalOperation
+  ): void {
     if (logical === "or") {
       if (!this.query.$or) {
         // Convert existing query to OR format
@@ -368,6 +380,7 @@ export class QueryBuilder<T> {
       }
       this.query.$and.push({ [field]: condition } as SafeSiftQuery<T>);
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (this.query as any)[field] = condition;
     }
   }
@@ -401,6 +414,7 @@ export class QueryBuilder<T> {
  *   .build();
  * ```
  */
+
 export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a new FieldBuilder instance for a specific field.
@@ -412,7 +426,7 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   constructor(
     private builder: QueryBuilder<T>,
     private field: K,
-    private logical?: "and" | "or"
+    private logical?: LogicalOperation
   ) {}
 
   /**
@@ -423,6 +437,7 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
    *
    * @internal
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private addCondition(condition: any): QueryBuilder<T> {
     this.builder._addCondition(this.field, condition, this.logical);
     return this.builder;
@@ -1040,6 +1055,9 @@ export class FieldBuilder<T, K extends DeepKeyOf<T>> {
  * console.log(filtered); // [{ name: 'Jane', age: 30, profile: { active: true, tags: ['admin'] } }]
  * ```
  */
+
 export function query<T>(): QueryBuilder<T> {
   return new QueryBuilder<T>();
 }
+
+// TODO: split this file to multiple files and fix all the eslint disable

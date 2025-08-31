@@ -17,7 +17,10 @@
       "Bash(npx tsc:*)",
       "Bash(npx ts-node:*)",
       "Bash(tree:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm exec eslint:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []
