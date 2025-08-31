@@ -1,6 +1,10 @@
-import { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "./types";
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable @typescript-eslint/consistent-type-assertions */
+/* eslint-disable import/group-exports */
+import { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "@types";
 import { SafeSift } from "./safe-sift";
 
+type LogicalOperation = "and" | "or";
 /**
  * Utility type that extracts the value type at a given path within an object.
  *
@@ -20,34 +24,9 @@ import { SafeSift } from "./safe-sift";
  * type AgeType = PathValue<User, 'profile.age'>; // number
  * ```
  */
-// Helper type to detect if T is a generic/unconstrained type
-// This checks if T has a definite structure vs being a type parameter
-type IsGeneric<T> = T extends infer U 
-  ? [U] extends [T] 
-    ? false  // T is concrete
-    : true   // T is generic
-  : false;
-
-type PathValue<T, K extends string> =
-  K extends keyof T
-    ? T[K]
-    : K extends DeepKeyOf<T>
-      ? DeepValueOf<T, K>
-      : IsGeneric<T> extends true
-        ? any // For generic types, allow any to support constraints
-        : never;
-
-type LogicalOperator = 'and' | 'or';
-
-function deleteField<T>(query: SafeSiftQuery<T>, field: string): void {
-  const queryRecord: Record<string, unknown> = query;
-  delete queryRecord[field];
-}
-
-function setField<T>(query: SafeSiftQuery<T>, field: string, value: unknown): void {
-  const queryRecord: Record<string, unknown> = query;
-  queryRecord[field] = value;
-}
+type PathValue<T, K extends string> = K extends DeepKeyOf<T>
+  ? DeepValueOf<T, K>
+  : never;
 
 /**
  * A fluent query builder that constructs type-safe queries for filtering objects and arrays.
@@ -85,10 +64,10 @@ function setField<T>(query: SafeSiftQuery<T>, field: string, value: unknown): vo
  *   .build();
  * ```
  */
-class QueryBuilder<T> {
+export class QueryBuilder<T> {
   private query: SafeSiftQuery<T> = {};
   private currentField: string | null = null;
-  private pendingCondition: LogicalOperator | null = null;
+  private pendingCondition: LogicalOperation | null = null;
   private originalBuild: (() => SafeSiftQuery<T>) | null = null;
 
   /**
@@ -137,7 +116,7 @@ class QueryBuilder<T> {
    * ```
    */
   and<K extends DeepKeyOf<T>>(field: K): FieldBuilder<T, K> {
-    return new FieldBuilder(this, field, 'and');
+    return new FieldBuilder(this, field, "and");
   }
 
   /**
@@ -158,7 +137,7 @@ class QueryBuilder<T> {
    * ```
    */
   or<K extends DeepKeyOf<T>>(field: K): FieldBuilder<T, K> {
-    return new FieldBuilder(this, field, 'or');
+    return new FieldBuilder(this, field, "or");
   }
 
   /**
@@ -184,8 +163,10 @@ class QueryBuilder<T> {
 
       this.build = () => {
         const query = this.originalBuild!();
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
-        return { $not: query } as SafeSiftQuery<T>;
+        const queryNot = { $not: query };
+
+        // eslint-disable-next-line no-restricted-syntax
+        return queryNot as SafeSiftQuery<T>;
       };
     }
 
@@ -275,7 +256,7 @@ class QueryBuilder<T> {
    * ```
    */
   removeField<K extends DeepKeyOf<T>>(field: K): QueryBuilder<T> {
-    deleteField(this.query, String(field));
+    delete this.query[field];
     return this;
   }
 
@@ -394,8 +375,13 @@ class QueryBuilder<T> {
    * builder._addCondition('status', 'active', 'or'); // OR condition
    * ```
    */
-  _addCondition(field: string, condition: unknown, logical?: LogicalOperator): void {
-    if (logical === 'or') {
+  _addCondition(
+    field: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    condition: any,
+    logical?: LogicalOperation
+  ): void {
+    if (logical === "or") {
       if (!this.query.$or) {
         // Convert existing query to OR format
         const existingConditions = { ...this.query };
@@ -403,25 +389,22 @@ class QueryBuilder<T> {
         delete existingConditions.$and;
         delete existingConditions.$not;
 
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, no-restricted-syntax
         this.query = { $or: [] } as SafeSiftQuery<T>;
 
         // Add existing conditions as the first OR clause
         if (Object.keys(existingConditions).length > 0) {
-          // eslint-disable-next-line no-restricted-syntax
           this.query.$or!.push(existingConditions as SafeSiftQuery<T>);
         }
       }
-      // eslint-disable-next-line no-restricted-syntax
       this.query.$or!.push({ [field]: condition } as SafeSiftQuery<T>);
-    } else if (logical === 'and') {
+    } else if (logical === "and") {
       if (!this.query.$and) {
         this.query.$and = [];
       }
-      // eslint-disable-next-line no-restricted-syntax
       this.query.$and.push({ [field]: condition } as SafeSiftQuery<T>);
     } else {
-      setField(this.query, String(field), condition);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this.query as any)[field] = condition;
     }
   }
 }
@@ -454,7 +437,8 @@ class QueryBuilder<T> {
  *   .build();
  * ```
  */
-class FieldBuilder<T, K extends DeepKeyOf<T>> {
+
+export class FieldBuilder<T, K extends DeepKeyOf<T>> {
   /**
    * Creates a new FieldBuilder instance for a specific field.
    *
@@ -465,7 +449,7 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
   constructor(
     private builder: QueryBuilder<T>,
     private field: K,
-    private logical?: LogicalOperator
+    private logical?: LogicalOperation
   ) {}
 
   /**
@@ -476,7 +460,8 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    *
    * @internal
    */
-  private addCondition(condition: unknown): QueryBuilder<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private addCondition(condition: any): QueryBuilder<T> {
     this.builder._addCondition(this.field, condition, this.logical);
     return this.builder;
   }
@@ -582,7 +567,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    *   .build();
    * ```
    */
-  greaterThan(value: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never): QueryBuilder<T> {
+  greaterThan(
+    value: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $gt: value });
   }
 
@@ -601,7 +590,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Results in: { score: { $gt: 100 } }
    * ```
    */
-  gt(value: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never): QueryBuilder<T> {
+  gt(
+    value: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $gt: value });
   }
 
@@ -620,7 +613,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Results in: { age: { $gte: 21 } }
    * ```
    */
-  greaterThanOrEqual(value: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never): QueryBuilder<T> {
+  greaterThanOrEqual(
+    value: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $gte: value });
   }
 
@@ -639,7 +636,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Results in: { rating: { $gte: 4.5 } }
    * ```
    */
-  gte(value: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never): QueryBuilder<T> {
+  gte(
+    value: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $gte: value });
   }
 
@@ -658,7 +659,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Results in: { age: { $lt: 65 } }
    * ```
    */
-  lessThan(value: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never): QueryBuilder<T> {
+  lessThan(
+    value: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $lt: value });
   }
 
@@ -677,7 +682,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Results in: { attempts: { $lt: 3 } }
    * ```
    */
-  lt(value: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never): QueryBuilder<T> {
+  lt(
+    value: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $lt: value });
   }
 
@@ -696,7 +705,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Results in: { age: { $lte: 35 } }
    * ```
    */
-  lessThanOrEqual(value: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never): QueryBuilder<T> {
+  lessThanOrEqual(
+    value: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $lte: value });
   }
 
@@ -715,7 +728,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Results in: { priority: { $lte: 5 } }
    * ```
    */
-  lte(value: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never): QueryBuilder<T> {
+  lte(
+    value: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $lte: value });
   }
 
@@ -742,7 +759,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    *   .build();
    * ```
    */
-  in(values: PathValue<T, K> extends ReadonlyArray<infer U> ? U[] : PathValue<T, K>[]): QueryBuilder<T> {
+  in(
+    values: PathValue<T, K> extends ReadonlyArray<infer U>
+      ? U[]
+      : PathValue<T, K>[]
+  ): QueryBuilder<T> {
     return this.addCondition({ $in: values });
   }
 
@@ -762,7 +783,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Results in: { status: { $nin: ['deleted', 'banned'] } }
    * ```
    */
-  notIn(values: PathValue<T, K> extends ReadonlyArray<infer U> ? U[] : PathValue<T, K>[]): QueryBuilder<T> {
+  notIn(
+    values: PathValue<T, K> extends ReadonlyArray<infer U>
+      ? U[]
+      : PathValue<T, K>[]
+  ): QueryBuilder<T> {
     return this.addCondition({ $nin: values });
   }
 
@@ -782,7 +807,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Results in: { role: { $nin: ['guest', 'temp'] } }
    * ```
    */
-  nin(values: PathValue<T, K> extends ReadonlyArray<infer U> ? U[] : PathValue<T, K>[]): QueryBuilder<T> {
+  nin(
+    values: PathValue<T, K> extends ReadonlyArray<infer U>
+      ? U[]
+      : PathValue<T, K>[]
+  ): QueryBuilder<T> {
     return this.addCondition({ $nin: values });
   }
 
@@ -803,7 +832,9 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Matches users whose tags array includes 'admin'
    * ```
    */
-  contains(value: PathValue<T, K> extends ReadonlyArray<infer U> ? U : never): QueryBuilder<T> {
+  contains(
+    value: PathValue<T, K> extends ReadonlyArray<infer U> ? U : never
+  ): QueryBuilder<T> {
     return this.addCondition(value);
   }
 
@@ -832,7 +863,9 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Matches users whose name starts with 'John'
    * ```
    */
-  regex(pattern: PathValue<T, K> extends string ? RegExp | string : never): QueryBuilder<T> {
+  regex(
+    pattern: PathValue<T, K> extends string ? RegExp | string : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $regex: pattern });
   }
 
@@ -853,7 +886,9 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Matches US phone numbers
    * ```
    */
-  matches(pattern: PathValue<T, K> extends string ? RegExp | string : never): QueryBuilder<T> {
+  matches(
+    pattern: PathValue<T, K> extends string ? RegExp | string : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $regex: pattern });
   }
 
@@ -903,7 +938,9 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Matches users with exactly 3 tags
    * ```
    */
-  size(value: PathValue<T, K> extends ReadonlyArray<unknown> ? number : never): QueryBuilder<T> {
+  size(
+    value: PathValue<T, K> extends ReadonlyArray<unknown> ? number : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $size: value });
   }
 
@@ -925,7 +962,9 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Matches users whose tags array contains BOTH 'admin' AND 'active'
    * ```
    */
-  all(values: PathValue<T, K> extends ReadonlyArray<infer U> ? U[] : never): QueryBuilder<T> {
+  all(
+    values: PathValue<T, K> extends ReadonlyArray<infer U> ? U[] : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $all: values });
   }
 
@@ -950,7 +989,11 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * // Matches users who have at least one completed order over $100
    * ```
    */
-  elemMatch(query: PathValue<T, K> extends ReadonlyArray<infer U> ? SafeSiftQuery<U> : never): QueryBuilder<T> {
+  elemMatch(
+    query: PathValue<T, K> extends ReadonlyArray<infer U>
+      ? SafeSiftQuery<U>
+      : never
+  ): QueryBuilder<T> {
     return this.addCondition({ $elemMatch: query });
   }
 
@@ -980,8 +1023,12 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
    * ```
    */
   between(
-    min: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never,
-    max: PathValue<T, K> extends string | number | Date ? PathValue<T, K> : never
+    min: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never,
+    max: PathValue<T, K> extends string | number | Date
+      ? PathValue<T, K>
+      : never
   ): QueryBuilder<T> {
     return this.addCondition({ $gte: min, $lte: max });
   }
@@ -1031,8 +1078,9 @@ class FieldBuilder<T, K extends DeepKeyOf<T>> {
  * console.log(filtered); // [{ name: 'Jane', age: 30, profile: { active: true, tags: ['admin'] } }]
  * ```
  */
-function query<T>(): QueryBuilder<T> {
+
+export function query<T>(): QueryBuilder<T> {
   return new QueryBuilder<T>();
 }
 
-export { QueryBuilder, FieldBuilder, query, type LogicalOperator };
+// TODO: split this file to multiple files and fix all the eslint disable

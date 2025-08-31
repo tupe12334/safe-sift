@@ -17,7 +17,12 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "baseUrl": ".",
+    "paths": {
+      "@types": ["src/types/index"],
+      "@types/*": ["src/types/*"]
+    }
   },
   "include": [
     "src/**/*",
