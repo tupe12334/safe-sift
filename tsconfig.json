@@ -26,11 +26,11 @@
   },
   "include": [
     "src/**/*",
-    "__tests__/**/*"
+    "__tests__/**/*",
+    "examples/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "examples/**/*"
+    "dist"
   ]
 }

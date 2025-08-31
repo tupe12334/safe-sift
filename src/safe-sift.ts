@@ -40,7 +40,24 @@ import { SafeSiftQuery } from "@types";
  * const firstMatch = safeSift.find(users); // John
  * ```
  */
-export class SafeSift<T> {
+type SiftParameters = Parameters<typeof sift>[0];
+type FindResult<T> = T | undefined;
+type SafeSiftReturnType<T> = {
+  test: (obj: T) => boolean;
+  filter: (array: T[]) => T[];
+  find: (array: T[]) => FindResult<T>;
+  findIndex: (array: T[]) => number;
+  some: (array: T[]) => boolean;
+  every: (array: T[]) => boolean;
+  count: (array: T[]) => number;
+};
+
+function createSiftFunction<T>(query: SafeSiftQuery<T>) {
+  const siftParams: SiftParameters = query;
+  return sift(siftParams);
+}
+
+class SafeSift<T> {
   /**
    * Creates a new SafeSift instance with the specified query.
    *
@@ -66,7 +83,7 @@ export class SafeSift<T> {
    * ```
    */
   test(obj: T): boolean {
-    return sift(this.query as Parameters<typeof sift>[0])(obj);
+    return createSiftFunction(this.query)(obj);
   }
 
   /**
@@ -89,7 +106,7 @@ export class SafeSift<T> {
    * ```
    */
   filter(array: T[]): T[] {
-    return array.filter(sift(this.query as Parameters<typeof sift>[0]));
+    return array.filter(createSiftFunction(this.query));
   }
 
   /**
@@ -111,8 +128,8 @@ export class SafeSift<T> {
    * // Result: { name: 'Jane', age: 30, role: 'admin' }
    * ```
    */
-  find(array: T[]): T | undefined {
-    return array.find(sift(this.query as Parameters<typeof sift>[0]));
+  find(array: T[]): FindResult<T> {
+    return array.find(createSiftFunction(this.query));
   }
 
   /**
@@ -135,7 +152,7 @@ export class SafeSift<T> {
    * ```
    */
   findIndex(array: T[]): number {
-    return array.findIndex(sift(this.query as Parameters<typeof sift>[0]));
+    return array.findIndex(createSiftFunction(this.query));
   }
 
   /**
@@ -158,7 +175,7 @@ export class SafeSift<T> {
    * ```
    */
   some(array: T[]): boolean {
-    return array.some(sift(this.query as Parameters<typeof sift>[0]));
+    return array.some(createSiftFunction(this.query));
   }
 
   /**
@@ -181,7 +198,7 @@ export class SafeSift<T> {
    * ```
    */
   every(array: T[]): boolean {
-    return array.every(sift(this.query as Parameters<typeof sift>[0]));
+    return array.every(createSiftFunction(this.query));
   }
 
   /**
@@ -241,7 +258,7 @@ export class SafeSift<T> {
  * // Result: [{ name: 'John', age: 25, active: true }]
  * ```
  */
-export function createQuery<T>(query: SafeSiftQuery<T>): SafeSift<T> {
+function createQuery<T>(query: SafeSiftQuery<T>): SafeSift<T> {
   return new SafeSift(query);
 }
 
@@ -284,8 +301,8 @@ export function createQuery<T>(query: SafeSiftQuery<T>): SafeSift<T> {
  * const totalCount = electronicsQuery.count(products); // 1
  * ```
  */
-export function safeSift<T>(query: SafeSiftQuery<T>) {
-  const siftFn = sift(query as Parameters<typeof sift>[0]);
+function safeSift<T>(query: SafeSiftQuery<T>): SafeSiftReturnType<T> {
+  const siftFn = createSiftFunction(query);
 
   return {
     /** Tests whether a single object matches the query conditions */
@@ -293,7 +310,7 @@ export function safeSift<T>(query: SafeSiftQuery<T>) {
     /** Filters an array to include only objects that match the query conditions */
     filter: (array: T[]): T[] => array.filter(siftFn),
     /** Finds the first object in an array that matches the query conditions */
-    find: (array: T[]): T | undefined => array.find(siftFn),
+    find: (array: T[]): FindResult<T> => array.find(siftFn),
     /** Finds the index of the first object that matches the query conditions */
     findIndex: (array: T[]): number => array.findIndex(siftFn),
     /** Tests whether at least one object in an array matches the query conditions */
@@ -304,3 +321,5 @@ export function safeSift<T>(query: SafeSiftQuery<T>) {
     count: (array: T[]): number => array.filter(siftFn).length,
   };
 }
+
+export { SafeSift, createQuery, safeSift, type SiftParameters, type FindResult, type SafeSiftReturnType };
