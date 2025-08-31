@@ -2,11 +2,11 @@ import type {
   DeepKeyOf,
   GetOptions,
   OpsBag,
-  PathValue,
   SafeSiftQuery,
 } from "@types";
 import { normalizeQuery } from "./filter-normalize";
 import { bagFromPreds, mergeOpsBags } from "./filter-ops";
+
 
 /**
  * Get operator bag(s) for a field.
@@ -20,11 +20,13 @@ import { bagFromPreds, mergeOpsBags } from "./filter-ops";
  * // => { $gte: 18 }  // default orMode="first"
  * ```
  */
-export function getFilterOps<T, K extends DeepKeyOf<T>>(
+type FilterOpsResult<T, K extends DeepKeyOf<T>> = OpsBag | OpsBag[] | undefined;
+
+function getFilterOps<T, K extends DeepKeyOf<T>>(
   query: SafeSiftQuery<T>,
   fieldPath: K,
   options: GetOptions = {}
-): OpsBag | OpsBag[] | undefined {
+): FilterOpsResult<T, K> {
   const { and, or } = normalizeQuery(query);
   const andBag = bagFromPreds(and.filter((p) => p.path === fieldPath));
 
@@ -74,36 +76,41 @@ export function getFilterOps<T, K extends DeepKeyOf<T>>(
  * ```
  */
 
-export function getFilterValue<T, K extends DeepKeyOf<T>>(
+type FilterValueResult<T> = unknown | OpsBag | OpsBag[] | undefined;
+
+function getFilterValue<T, K extends DeepKeyOf<T>>(
   query: SafeSiftQuery<T>,
   fieldPath: K,
   op?: keyof OpsBag,
   options?: GetOptions
-): PathValue<T, K> | OpsBag | OpsBag[] | undefined {
+): FilterValueResult<T> {
   const ops = getFilterOps<T, K>(query, fieldPath, options);
   if (!ops) return undefined;
 
   // If a specific operator is requested, return that value typed to the field
   if (op) {
     if (Array.isArray(ops)) {
-      const v = ops[0]?.[op];
-      return v as PathValue<T, K> | undefined; // <- eliminate 'unknown'
+      const firstOps = ops[0];
+      const v = firstOps ? firstOps[op] : undefined;
+      return v;
     }
-    return (ops as OpsBag)[op] as PathValue<T, K> | undefined; // <- eliminate 'unknown'
+    return ops[op];
   }
 
   // op omitted → prefer $eq, else return the bag(s)
   if (Array.isArray(ops)) {
     const first = ops[0];
     if (first && first["$eq"] !== undefined) {
-      return first["$eq"] as PathValue<T, K>;
+      return first["$eq"];
     }
     return ops; // OpsBag[]
   }
 
   if (ops["$eq"] !== undefined) {
-    return ops["$eq"] as PathValue<T, K>;
+    return ops["$eq"];
   }
 
   return ops; // OpsBag
 }
+
+export { getFilterOps, getFilterValue };

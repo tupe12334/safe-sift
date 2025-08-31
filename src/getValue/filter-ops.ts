@@ -12,7 +12,7 @@ import type { OpsBag, Predicate } from "@types";
  * // => { $gte: 18, $lte: 30 }
  * ```
  */
-export function bagFromPreds(preds: Predicate[]): OpsBag {
+function bagFromPreds(preds: Predicate[]): OpsBag {
   const bag: OpsBag = {};
   for (const p of preds) bag[p.op] = p.value;
   return bag;
@@ -27,6 +27,8 @@ export function bagFromPreds(preds: Predicate[]): OpsBag {
  * // => { $gte: 18, $lte: 30 }
  * ```
  */
-export function mergeOpsBags(...bags: OpsBag[]): OpsBag {
-  return bags.reduce((acc, b) => Object.assign(acc, b), {} as OpsBag);
+function mergeOpsBags(...bags: OpsBag[]): OpsBag {
+  return bags.reduce((acc, b) => Object.assign(acc, b), {});
 }
+
+export { bagFromPreds, mergeOpsBags };

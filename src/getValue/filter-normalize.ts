@@ -5,6 +5,10 @@ function isPlainObject(x: unknown): x is Record<string, unknown> {
   return Object.prototype.toString.call(x) === "[object Object]";
 }
 
+function createPredicateFromOperator(path: string, op: MqlOperator, value: unknown): Predicate {
+  return { path, op, value };
+}
+
 /**
  * Returns true if the key is an MQL operator (starts with "$").
  *
@@ -14,7 +18,7 @@ function isPlainObject(x: unknown): x is Record<string, unknown> {
  * isOperatorKey("name"); // false
  * ```
  */
-export function isOperatorKey(k: string): k is MqlOperator {
+function isOperatorKey(k: string): k is MqlOperator {
   return k.startsWith("$");
 }
 
@@ -33,16 +37,19 @@ export function isOperatorKey(k: string): k is MqlOperator {
  * // ]
  * ```
  */
-export function normalizeEquality(path: string, v: unknown): Predicate[] {
+function normalizeEquality(path: string, v: unknown): Predicate[] {
   //   if (v && typeof v === "object" && !Array.isArray(v)) {
   if (isPlainObject(v)) {
-    const entries = Object.entries(v as Record<string, unknown>);
+    const entries = Object.entries(v);
     if (entries.every(([k]) => isOperatorKey(k))) {
-      return entries.map(([op, val]) => ({
-        path,
-        op: op as MqlOperator,
-        value: val,
-      }));
+      // All keys are verified operators
+      const predicates: Predicate[] = [];
+      for (const [op, val] of entries) {
+        if (isOperatorKey(op)) {
+          predicates.push(createPredicateFromOperator(path, op, val));
+        }
+      }
+      return predicates;
     }
   }
   return [{ path, op: "$eq", value: v }];
@@ -61,7 +68,7 @@ export function normalizeEquality(path: string, v: unknown): Predicate[] {
  * //                     [{ path: "name", op: "$eq", value: "Bob" }]] }
  * ```
  */
-export function normalizeQuery(q: unknown, basePath = ""): Normalized {
+function normalizeQuery(q: unknown, basePath = ""): Normalized {
   const acc: Normalized = { and: [], or: [] };
 
   if (!q || typeof q !== "object" || Array.isArray(q)) return acc;
@@ -92,12 +99,11 @@ export function normalizeQuery(q: unknown, basePath = ""): Normalized {
     if (isPlainObject(val)) {
       const opKeys = Object.keys(val).filter(isOperatorKey);
       if (opKeys.length) {
-        for (const op of opKeys) {
-          acc.and.push({
-            path,
-            op: op as MqlOperator,
-            value: (val as any)[op],
-          });
+        const valEntries = Object.entries(val);
+        for (const [op, opValue] of valEntries) {
+          if (isOperatorKey(op)) {
+            acc.and.push(createPredicateFromOperator(path, op, opValue));
+          }
         }
         continue;
       }
@@ -112,3 +118,5 @@ export function normalizeQuery(q: unknown, basePath = ""): Normalized {
 
   return acc;
 }
+
+export { isOperatorKey, normalizeEquality, normalizeQuery };
