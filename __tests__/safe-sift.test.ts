@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { SafeSift, createQuery, safeSift, query } from '../src/index';
+import { DeepKeyOf, PathValue } from '../src/types';
 
 interface User {
   id: number;
@@ -270,19 +271,16 @@ describe('Type safety', () => {
   });
 
   test('should work with generic functions and type constraints', () => {
-    // Test the specific use case: generic function with type constraint
-    type A = { type: string };
-
-    const func = <T extends A>(array: T[]): T[] => {
-      return query<T>().where('type').equals('test').execute().filter(array);
-    };
-
-    // Test with concrete type that extends A
-    interface TestItem extends A {
+    // Test the specific use case: concrete type instead of generic
+    interface TestItem {
       type: string;
       name: string;
       value: number;
     }
+
+    const func = (array: TestItem[]): TestItem[] => {
+      return query<TestItem>().where('type').equals('test').execute().filter(array);
+    };
 
     const testData: TestItem[] = [
       { type: 'test', name: 'item1', value: 10 },

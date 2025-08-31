@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { getFilterOps, getFilterValue } from "../src/getValue";
 import { normalizeQuery } from "../src/getValue";
-import type { OpsBag } from "@types";
+import type { OpsBag, SafeSiftQuery } from "@types";
 
 describe("normalizeQuery", () => {
   it("normalizes simple equality", () => {
@@ -78,7 +78,13 @@ describe("getFilterOps", () => {
   });
 
   it("returns undefined when field is not constrained", () => {
-    const ops = getFilterOps({ age: { $gte: 18 } }, "name");
+    interface TestUser {
+      age: number;
+      email: string;
+      name: string;
+    }
+    const query: SafeSiftQuery<TestUser> = { $or: [{ age: { $gte: 18 } }, { email: "test@example.com" }] };
+    const ops = getFilterOps(query, "name");
     expect(ops).toBeUndefined();
   });
 
@@ -117,7 +123,13 @@ describe("getFilterValue", () => {
   });
 
   it("returns undefined when the field is absent", () => {
-    const v = getFilterValue({ age: { $gte: 18 } }, "name");
+    interface TestUser {
+      age: number;
+      email: string;
+      name: string;
+    }
+    const query: SafeSiftQuery<TestUser> = { $or: [{ age: { $gte: 18 } }, { email: "test@example.com" }] };
+    const v = getFilterValue(query, "name");
     expect(v).toBeUndefined();
   });
 
