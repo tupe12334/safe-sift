@@ -1,33 +1,10 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 /* eslint-disable import/group-exports */
-import { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "@types";
+import { DeepKeyOf, PathValue, SafeSiftQuery } from "@types";
 import { SafeSift } from "./safe-sift";
 
 type LogicalOperation = "and" | "or";
-/**
- * Utility type that extracts the value type at a given path within an object.
- *
- * @template T - The object type to extract the value from
- * @template K - The path string to the desired value
- *
- * @example
- * ```typescript
- * interface User {
- *   profile: {
- *     name: string;
- *     age: number;
- *   }
- * }
- *
- * type NameType = PathValue<User, 'profile.name'>; // string
- * type AgeType = PathValue<User, 'profile.age'>; // number
- * ```
- */
-type PathValue<T, K extends string> = K extends DeepKeyOf<T>
-  ? DeepValueOf<T, K>
-  : never;
-
 /**
  * A fluent query builder that constructs type-safe queries for filtering objects and arrays.
  * Uses the builder pattern to create complex queries with logical operators and field conditions.
