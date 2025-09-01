@@ -93,3 +93,6 @@ export {
   normalizeEquality,
   normalizeQuery,
 } from "./getValue";
+
+// Query comparison utility
+export { areQueriesEqual } from "./are-queries-equal";
