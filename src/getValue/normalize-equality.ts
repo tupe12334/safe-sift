@@ -1,4 +1,4 @@
-import type { MqlOperator, Predicate } from "@types";
+import type { MqlOperator, Predicate } from "../types";
 import { isOperatorKey } from "./is-operator-key";
 
 /** Narrow: true only for plain object literals (not Date/RegExp/Map/etc.) */

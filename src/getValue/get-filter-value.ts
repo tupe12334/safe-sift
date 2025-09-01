@@ -1,4 +1,4 @@
-import type { DeepKeyOf, GetOptions, OpsBag, SafeSiftQuery } from "@types";
+import type { DeepKeyOf, GetOptions, OpsBag, SafeSiftQuery } from "../types";
 import { getFilterOps } from "./get-filter-ops";
 
 /**

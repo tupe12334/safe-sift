@@ -1,4 +1,4 @@
-import type { OpsBag } from "@types";
+import type { OpsBag } from "../types";
 
 /**
  * Merge multiple operator bags.

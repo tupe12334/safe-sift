@@ -1,4 +1,4 @@
-import { SafeSiftQuery } from "@types";
+import { SafeSiftQuery } from "./types";
 import { SafeSift } from "./safe-sift-class";
 
 /**

@@ -1,4 +1,4 @@
-import type { MqlOperator } from "@types";
+import type { MqlOperator } from "../types";
 
 /**
  * Returns true if the key is an MQL operator (starts with "$").

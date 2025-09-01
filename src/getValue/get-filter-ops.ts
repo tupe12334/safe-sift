@@ -1,4 +1,4 @@
-import type { DeepKeyOf, GetOptions, OpsBag, SafeSiftQuery } from "@types";
+import type { DeepKeyOf, GetOptions, OpsBag, SafeSiftQuery } from "../types";
 import { normalizeQuery } from "./normalize-query";
 import { bagFromPreds } from "./bag-from-preds";
 import { mergeOpsBags } from "./merge-ops-bags";

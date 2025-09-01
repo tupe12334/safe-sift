@@ -1,4 +1,4 @@
-import { SafeSiftQuery } from "@types";
+import { SafeSiftQuery } from "./types";
 import { createSiftFunction } from "./create-sift-function";
 import type { FindResult } from "./find-result";
 

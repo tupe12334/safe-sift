@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 /* eslint-disable import/group-exports */
-import { DeepKeyOf, PathValue, SafeSiftQuery } from "@types";
+import { DeepKeyOf, PathValue, SafeSiftQuery } from "./types";
 import { SafeSift } from "./safe-sift";
 
 type LogicalOperation = "and" | "or";

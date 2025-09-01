@@ -1,4 +1,4 @@
-import type { OpsBag, Predicate } from "@types";
+import type { OpsBag, Predicate } from "../types";
 
 /**
  * Build an operator bag from predicates.

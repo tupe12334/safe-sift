@@ -1,4 +1,4 @@
-import type { MqlOperator, Normalized, Predicate } from "@types";
+import type { MqlOperator, Normalized, Predicate } from "../types";
 import { isOperatorKey } from "./is-operator-key";
 import { normalizeEquality } from "./normalize-equality";
 
