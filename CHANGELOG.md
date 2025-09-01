@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.0.10](https://github.com/tupe12334/safe-sift/compare/1.0.9...1.0.10) (2025-09-01)
+
 ## [1.0.9](https://github.com/tupe12334/safe-sift/compare/1.0.8...1.0.9) (2025-09-01)
 
 
