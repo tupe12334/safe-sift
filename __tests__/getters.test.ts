@@ -153,4 +153,61 @@ describe("getFilterValue", () => {
     const bag = getFilterValue(q, "age") as OpsBag; // no $eq → returns bag
     expect(bag).toEqual({ $gte: 18, $lte: 30 });
   });
+
+  it("returns correct types for different query scenarios", () => {
+    interface TestUser {
+      id: number;
+      name: string;
+      age: number;
+      isActive: boolean;
+      role: "ADMIN" | "USER" | "TEST";
+    }
+
+    // Test T type - direct equality value (string)
+    const nameValue = getFilterValue<TestUser, "name">({ name: "Alice" }, "name");
+    expect(nameValue).toBe("Alice");
+    expect(typeof nameValue).toBe("string");
+
+    // Test T type - direct equality value (number)
+    const ageValue = getFilterValue<TestUser, "age">({ age: 25 }, "age");
+    expect(ageValue).toBe(25);
+    expect(typeof ageValue).toBe("number");
+
+    // Test T type - direct equality value (boolean)
+    const activeValue = getFilterValue<TestUser, "isActive">({ isActive: true }, "isActive");
+    expect(activeValue).toBe(true);
+    expect(typeof activeValue).toBe("boolean");
+
+    // Test T type - string literal union
+    const roleValue = getFilterValue<TestUser, "role">({ role: "ADMIN" }, "role");
+    expect(roleValue).toBe("ADMIN");
+    expect(typeof roleValue).toBe("string");
+
+    // Test OpsBag type - operator object
+    const ageBag = getFilterValue<TestUser, "age">({ age: { $gte: 18, $lte: 65 } }, "age");
+    expect(ageBag).toEqual({ $gte: 18, $lte: 65 });
+    expect(typeof ageBag).toBe("object");
+    expect(ageBag).not.toBeNull();
+    expect(Array.isArray(ageBag)).toBe(false);
+
+    // Test OpsBag[] type - multiple OR branches
+    const query = { $or: [{ age: { $gte: 18 } }, { age: { $lte: 65 } }] };
+    const ageBags = getFilterOps<TestUser, "age">(query, "age", { orMode: "all" }) as OpsBag[];
+    expect(Array.isArray(ageBags)).toBe(true);
+    expect(ageBags).toHaveLength(2);
+    expect(ageBags[0]).toEqual({ $gte: 18 });
+    expect(ageBags[1]).toEqual({ $lte: 65 });
+
+    // Test undefined type - field not present in query
+    const undefinedValue = getFilterValue<TestUser, "name">({ age: 25 }, "name");
+    expect(undefinedValue).toBeUndefined();
+
+    // Test specific operator value extraction
+    const gteValue = getFilterValue<TestUser, "age">({ age: { $gte: 18, $lte: 65 } }, "age", "$gte");
+    expect(gteValue).toBe(18);
+    expect(typeof gteValue).toBe("number");
+
+    const nonExistentOp = getFilterValue<TestUser, "age">({ age: { $gte: 18 } }, "age", "$lte");
+    expect(nonExistentOp).toBeUndefined();
+  });
 });
