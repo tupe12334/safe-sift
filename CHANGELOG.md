@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.7](https://github.com/tupe12334/safe-sift/compare/1.0.6...1.0.7) (2025-09-01)
+
+
+### Features
+
+* update ESLint configuration and dependencies ([d268848](https://github.com/tupe12334/safe-sift/commit/d268848022eecc5c126b27766ac847f174928c8f))
+
 ## 1.0.6 (2025-08-31)
 
 
