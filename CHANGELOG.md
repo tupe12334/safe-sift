@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.8](https://github.com/tupe12334/safe-sift/compare/1.0.7...1.0.8) (2025-09-01)
+
+
+### Features
+
+* add simple showcase with safe-sift filtering example ([dbd7452](https://github.com/tupe12334/safe-sift/commit/dbd7452fc11f3b284aebef65f06562e27553a846))
+
 ## [1.0.7](https://github.com/tupe12334/safe-sift/compare/1.0.6...1.0.7) (2025-09-01)
 
 
