@@ -1,5 +1,5 @@
 import { describe, it, expect, expectTypeOf } from "vitest";
-import { query } from "../src/index";
+import { query, safeSift } from "../src/index";
 import { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "../src/types";
 
 type Theme = "light" | "dark";
@@ -206,6 +206,26 @@ describe("Type Safety and Autocomplete Tests", () => {
       builder.where("profile.preferences.theme").in(["light", "dark"]);
 
       expect(true).toBe(true);
+    });
+
+    it("should handle union types with $in operator directly", () => {
+      interface UserWithRole {
+        role: "ADMIN" | "USER" | "TEST";
+      }
+
+      // Test the direct safeSift function with union types
+      const query1 = query<UserWithRole>()
+        .where("role")
+        .in(["ADMIN", "USER"])
+        .build();
+
+      // This should work without type errors
+      const result = safeSift<UserWithRole>({
+        role: { $in: ["ADMIN", "USER"] }
+      });
+
+      expect(query1).toBeDefined();
+      expect(result).toBeDefined();
     });
 
     it("should handle optional field types", () => {

@@ -303,4 +303,31 @@ describe("Type safety", () => {
     expect(result[0]?.name).toBe("item1");
     expect(result[1]?.name).toBe("item3");
   });
+
+  test("should type check string literal unions with $in operator", () => {
+    interface UserWithRole {
+      id: number;
+      name: string;
+      role: "ADMIN" | "USER" | "TEST";
+    }
+
+    const usersWithRoles: UserWithRole[] = [
+      { id: 1, name: "Alice", role: "ADMIN" },
+      { id: 2, name: "Bob", role: "USER" },
+      { id: 3, name: "Charlie", role: "TEST" },
+      { id: 4, name: "David", role: "USER" },
+    ];
+
+    // Test safeSift function with $in operator for string literal union
+    const { filter } = safeSift<UserWithRole>({
+      role: { $in: ["ADMIN", "USER"] }
+    });
+
+    const result = filter(usersWithRoles);
+
+    expect(result).toHaveLength(3);
+    expect(result.map(u => u.role).sort()).toEqual(["ADMIN", "USER", "USER"]);
+    expect(result.every(user => user.role === "ADMIN" || user.role === "USER")).toBe(true);
+    expect(result.find(user => user.role === "TEST")).toBeUndefined();
+  });
 });
