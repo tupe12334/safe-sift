@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { getFilterOps, getFilterValue } from "../src/getValue";
 import { normalizeQuery } from "../src/getValue";
-import type { OpsBag, SafeSiftQuery } from "@types";
+import type { OpsBag, SafeSiftQuery } from "../src/types";
 
 describe("normalizeQuery", () => {
   it("normalizes simple equality", () => {
