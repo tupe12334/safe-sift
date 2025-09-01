@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.9](https://github.com/tupe12334/safe-sift/compare/1.0.8...1.0.9) (2025-09-01)
+
+
+### Bug Fixes
+
+* update import path for type definitions in index.ts ([f739054](https://github.com/tupe12334/safe-sift/commit/f739054dacccc5e40e0346f74569183bee009933))
+
 ## [1.0.8](https://github.com/tupe12334/safe-sift/compare/1.0.7...1.0.8) (2025-09-01)
 
 
