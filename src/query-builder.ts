@@ -366,7 +366,7 @@ export class QueryBuilder<T> {
         delete existingConditions.$and;
         delete existingConditions.$not;
 
-        this.query = { $or: [] } as SafeSiftQuery<T>;
+        this.query = { $or: [] } as unknown as SafeSiftQuery<T>;
 
         // Add existing conditions as the first OR clause
         if (Object.keys(existingConditions).length > 0) {

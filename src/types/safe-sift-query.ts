@@ -54,14 +54,18 @@ import type { ComparisonOperators } from "./comparison-operators";
  *```
  */
 export type SafeSiftQuery<T> = {
+  // Logical operators
   $and?: SafeSiftQuery<T>[];
   $or?: SafeSiftQuery<T>[];
   $nor?: SafeSiftQuery<T>[];
   $not?: SafeSiftQuery<T>;
 } & {
-  [K in keyof T]?: FieldQuery<T[K]>;
-} & {
-  [K in DeepKeyOf<T>]?: FieldQuery<DeepValueOf<T, K>>;
+  // Direct field queries and deep field queries combined in one mapped type
+  [K in keyof T | DeepKeyOf<T>]?: K extends keyof T
+    ? FieldQuery<T[K]>
+    : K extends DeepKeyOf<T>
+    ? FieldQuery<DeepValueOf<T, K>>
+    : never;
 };
 
 /**

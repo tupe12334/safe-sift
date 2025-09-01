@@ -1,6 +1,6 @@
-import { describe, test, expect } from 'vitest';
-import { SafeSift, createQuery, safeSift, query } from '../src/index';
-import { DeepKeyOf, PathValue } from '../src/types';
+import { describe, test, expect } from "vitest";
+import { SafeSift, createQuery, safeSift, query } from "../";
+import { DeepKeyOf, PathValue } from "../src/types";
 
 interface User {
   id: number;
@@ -13,7 +13,7 @@ interface User {
     bio: string;
     location: string;
     preferences: {
-      theme: 'light' | 'dark';
+      theme: "light" | "dark";
       notifications: boolean;
     };
   };
@@ -23,115 +23,119 @@ interface User {
 const testUsers: User[] = [
   {
     id: 1,
-    name: 'John Doe',
-    email: 'john@example.com',
+    name: "John Doe",
+    email: "john@example.com",
     age: 30,
     isActive: true,
-    tags: ['admin', 'developer'],
+    tags: ["admin", "developer"],
     profile: {
-      bio: 'Software engineer',
-      location: 'New York',
+      bio: "Software engineer",
+      location: "New York",
       preferences: {
-        theme: 'dark',
+        theme: "dark",
         notifications: true,
       },
     },
-    createdAt: new Date('2023-01-15'),
+    createdAt: new Date("2023-01-15"),
   },
   {
     id: 2,
-    name: 'Jane Smith',
-    email: 'jane@example.com',
+    name: "Jane Smith",
+    email: "jane@example.com",
     age: 25,
     isActive: false,
-    tags: ['designer', 'manager'],
+    tags: ["designer", "manager"],
     profile: {
-      bio: 'UX Designer',
-      location: 'San Francisco',
+      bio: "UX Designer",
+      location: "San Francisco",
       preferences: {
-        theme: 'light',
+        theme: "light",
         notifications: false,
       },
     },
-    createdAt: new Date('2023-02-20'),
+    createdAt: new Date("2023-02-20"),
   },
   {
     id: 3,
-    name: 'Bob Johnson',
-    email: 'bob@example.com',
+    name: "Bob Johnson",
+    email: "bob@example.com",
     age: 35,
     isActive: true,
-    tags: ['developer'],
+    tags: ["developer"],
     profile: {
-      bio: 'Backend developer',
-      location: 'Austin',
+      bio: "Backend developer",
+      location: "Austin",
       preferences: {
-        theme: 'dark',
+        theme: "dark",
         notifications: true,
       },
     },
-    createdAt: new Date('2022-12-10'),
+    createdAt: new Date("2022-12-10"),
   },
 ];
 
-describe('SafeSift', () => {
-  describe('Basic queries', () => {
-    test('should filter by equality', () => {
+describe("SafeSift", () => {
+  describe("Basic queries", () => {
+    test("should filter by equality", () => {
       const query = new SafeSift<User>({ isActive: true });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(2);
-      expect(result.every(user => user.isActive)).toBe(true);
+      expect(result.every((user) => user.isActive)).toBe(true);
     });
 
-    test('should filter by $eq operator', () => {
+    test("should filter by $eq operator", () => {
       const query = new SafeSift<User>({ age: { $eq: 30 } });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(1);
-      expect(result[0]?.name).toBe('John Doe');
+      expect(result[0]?.name).toBe("John Doe");
     });
 
-    test('should filter by $gt operator', () => {
+    test("should filter by $gt operator", () => {
       const query = new SafeSift<User>({ age: { $gt: 30 } });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(1);
-      expect(result[0]?.name).toBe('Bob Johnson');
+      expect(result[0]?.name).toBe("Bob Johnson");
     });
 
-    test('should filter by $in operator', () => {
-      const query = new SafeSift<User>({ name: { $in: ['John Doe', 'Jane Smith'] } });
+    test("should filter by $in operator", () => {
+      const query = new SafeSift<User>({
+        name: { $in: ["John Doe", "Jane Smith"] },
+      });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(2);
     });
 
-    test('should filter by array contains', () => {
-      const query = new SafeSift<User>({ tags: 'developer' });
+    test("should filter by array contains", () => {
+      const query = new SafeSift<User>({ tags: "developer" });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(2);
     });
 
-    test('should filter by array $all operator', () => {
-      const query = new SafeSift<User>({ tags: { $all: ['admin', 'developer'] } });
+    test("should filter by array $all operator", () => {
+      const query = new SafeSift<User>({
+        tags: { $all: ["admin", "developer"] },
+      });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(1);
-      expect(result[0]?.name).toBe('John Doe');
+      expect(result[0]?.name).toBe("John Doe");
     });
   });
 
-  describe('Nested queries', () => {
-    test('should filter by nested properties', () => {
-      const query = new SafeSift<User>({ 'profile.location': 'New York' });
+  describe("Nested queries", () => {
+    test("should filter by nested properties", () => {
+      const query = new SafeSift<User>({ "profile.location": "New York" });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(1);
-      expect(result[0]?.name).toBe('John Doe');
+      expect(result[0]?.name).toBe("John Doe");
     });
 
-    test('should filter by deeply nested properties', () => {
-      const query = new SafeSift<User>({ 'profile.preferences.theme': 'dark' });
+    test("should filter by deeply nested properties", () => {
+      const query = new SafeSift<User>({ "profile.preferences.theme": "dark" });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(2);
     });
 
-    test('should filter by nested object with $elemMatch', () => {
+    test("should filter by nested object with $elemMatch", () => {
       interface Order {
         id: number;
         items: { name: string; price: number; category: string }[];
@@ -141,21 +145,21 @@ describe('SafeSift', () => {
         {
           id: 1,
           items: [
-            { name: 'Laptop', price: 1000, category: 'electronics' },
-            { name: 'Mouse', price: 25, category: 'electronics' },
+            { name: "Laptop", price: 1000, category: "electronics" },
+            { name: "Mouse", price: 25, category: "electronics" },
           ],
         },
         {
           id: 2,
           items: [
-            { name: 'Book', price: 15, category: 'books' },
-            { name: 'Pen', price: 2, category: 'office' },
+            { name: "Book", price: 15, category: "books" },
+            { name: "Pen", price: 2, category: "office" },
           ],
         },
       ];
 
       const query = new SafeSift<Order>({
-        items: { $elemMatch: { category: 'electronics', price: { $gt: 500 } } },
+        items: { $elemMatch: { category: "electronics", price: { $gt: 500 } } },
       });
       const result = query.filter(orders);
       expect(result).toHaveLength(1);
@@ -163,8 +167,8 @@ describe('SafeSift', () => {
     });
   });
 
-  describe('Logical operators', () => {
-    test('should filter with $and operator', () => {
+  describe("Logical operators", () => {
+    test("should filter with $and operator", () => {
       const query = new SafeSift<User>({
         $and: [{ age: { $gte: 30 } }, { isActive: true }],
       });
@@ -172,68 +176,68 @@ describe('SafeSift', () => {
       expect(result).toHaveLength(2);
     });
 
-    test('should filter with $or operator', () => {
+    test("should filter with $or operator", () => {
       const query = new SafeSift<User>({
-        $or: [{ age: { $lt: 26 } }, { name: 'Bob Johnson' }],
+        $or: [{ age: { $lt: 26 } }, { name: "Bob Johnson" }],
       });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(2);
     });
 
-    test('should filter with $not operator', () => {
+    test("should filter with $not operator", () => {
       const query = new SafeSift<User>({
         $not: { isActive: true },
       });
       const result = query.filter(testUsers);
       expect(result).toHaveLength(1);
-      expect(result[0]?.name).toBe('Jane Smith');
+      expect(result[0]?.name).toBe("Jane Smith");
     });
   });
 
-  describe('Array methods', () => {
-    test('should test single object with test method', () => {
+  describe("Array methods", () => {
+    test("should test single object with test method", () => {
       const query = new SafeSift<User>({ isActive: true });
       expect(query.test(testUsers[0]!)).toBe(true);
       expect(query.test(testUsers[1]!)).toBe(false);
     });
 
-    test('should find first matching item', () => {
+    test("should find first matching item", () => {
       const query = new SafeSift<User>({ age: { $gt: 25 } });
       const result = query.find(testUsers);
-      expect(result?.name).toBe('John Doe');
+      expect(result?.name).toBe("John Doe");
     });
 
-    test('should find index of first matching item', () => {
-      const query = new SafeSift<User>({ name: 'Jane Smith' });
+    test("should find index of first matching item", () => {
+      const query = new SafeSift<User>({ name: "Jane Smith" });
       const result = query.findIndex(testUsers);
       expect(result).toBe(1);
     });
 
-    test('should check if some items match', () => {
+    test("should check if some items match", () => {
       const query = new SafeSift<User>({ age: { $gt: 40 } });
       expect(query.some(testUsers)).toBe(false);
-      
+
       const query2 = new SafeSift<User>({ age: { $gt: 20 } });
       expect(query2.some(testUsers)).toBe(true);
     });
 
-    test('should check if all items match', () => {
+    test("should check if all items match", () => {
       const query = new SafeSift<User>({ age: { $gt: 20 } });
       expect(query.every(testUsers)).toBe(true);
-      
+
       const query2 = new SafeSift<User>({ isActive: true });
       expect(query2.every(testUsers)).toBe(false);
     });
 
-    test('should count matching items', () => {
+    test("should count matching items", () => {
       const query = new SafeSift<User>({ isActive: true });
       expect(query.count(testUsers)).toBe(2);
     });
   });
 });
 
-describe('createQuery function', () => {
-  test('should create SafeSift instance', () => {
+describe("createQuery function", () => {
+  test("should create SafeSift instance", () => {
     const query = createQuery<User>({ isActive: true });
     expect(query).toBeInstanceOf(SafeSift);
     const result = query.filter(testUsers);
@@ -241,19 +245,19 @@ describe('createQuery function', () => {
   });
 });
 
-describe('safeSift function', () => {
-  test('should return query functions', () => {
+describe("safeSift function", () => {
+  test("should return query functions", () => {
     const { filter, find, test, count } = safeSift<User>({ isActive: true });
-    
+
     expect(filter(testUsers)).toHaveLength(2);
-    expect(find(testUsers)?.name).toBe('John Doe');
+    expect(find(testUsers)?.name).toBe("John Doe");
     expect(test(testUsers[0]!)).toBe(true);
     expect(count(testUsers)).toBe(2);
   });
 });
 
-describe('Type safety', () => {
-  test('should provide compile-time type checking', () => {
+describe("Type safety", () => {
+  test("should provide compile-time type checking", () => {
     // These should all compile without errors due to proper typing
     const validQueries = [
       new SafeSift<User>({ id: 1 }),
@@ -261,16 +265,16 @@ describe('Type safety', () => {
       new SafeSift<User>({ age: { $gte: 18, $lt: 65 } }),
       new SafeSift<User>({ isActive: { $exists: true } }),
       new SafeSift<User>({ tags: { $size: 2 } }),
-      new SafeSift<User>({ 'profile.bio': 'Software engineer' }),
-      new SafeSift<User>({ 'profile.preferences.theme': 'dark' }),
+      new SafeSift<User>({ "profile.bio": "Software engineer" }),
+      new SafeSift<User>({ "profile.preferences.theme": "dark" }),
     ];
 
-    validQueries.forEach(query => {
+    validQueries.forEach((query) => {
       expect(query).toBeInstanceOf(SafeSift);
     });
   });
 
-  test('should work with generic functions and type constraints', () => {
+  test("should work with generic functions and type constraints", () => {
     // Test the specific use case: concrete type instead of generic
     interface TestItem {
       type: string;
@@ -279,20 +283,24 @@ describe('Type safety', () => {
     }
 
     const func = (array: TestItem[]): TestItem[] => {
-      return query<TestItem>().where('type').equals('test').execute().filter(array);
+      return query<TestItem>()
+        .where("type")
+        .equals("test")
+        .execute()
+        .filter(array);
     };
 
     const testData: TestItem[] = [
-      { type: 'test', name: 'item1', value: 10 },
-      { type: 'other', name: 'item2', value: 20 },
-      { type: 'test', name: 'item3', value: 30 },
+      { type: "test", name: "item1", value: 10 },
+      { type: "other", name: "item2", value: 20 },
+      { type: "test", name: "item3", value: 30 },
     ];
 
     const result = func(testData);
-    
+
     expect(result).toHaveLength(2);
-    expect(result.every(item => item.type === 'test')).toBe(true);
-    expect(result[0]?.name).toBe('item1');
-    expect(result[1]?.name).toBe('item3');
+    expect(result.every((item) => item.type === "test")).toBe(true);
+    expect(result[0]?.name).toBe("item1");
+    expect(result[1]?.name).toBe("item3");
   });
 });
