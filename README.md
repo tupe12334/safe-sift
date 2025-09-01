@@ -251,6 +251,68 @@ function safeSift<T>(query: SafeSiftQuery<T>): {
 }
 ```
 
+### Utility Functions
+
+Safe Sift also exports several utility functions for advanced use cases:
+
+```typescript
+// Query value extraction
+import { getFilterValue, getFilterOps } from 'safe-sift';
+
+// Get a specific operator value or the raw operator bag from a query
+const value = getFilterValue(
+  { age: { $gte: 18, $lte: 65 } }, 
+  'age', 
+  '$gte'  // Optional: specific operator
+);
+console.log(value); // 18
+
+// Get all operator conditions for a field
+const ops = getFilterOps({ age: { $gte: 18, $lte: 65 } }, 'age');
+console.log(ops); // { $gte: 18, $lte: 65 }
+
+// Query normalization and analysis
+import { 
+  normalizeQuery, 
+  bagFromPreds, 
+  isOperatorKey,
+  mergeOpsBags,
+  normalizeEquality,
+  areQueriesEqual 
+} from 'safe-sift';
+
+// Normalize a query into predicates
+const normalized = normalizeQuery({ 
+  age: { $gte: 18 }, 
+  name: 'John',
+  $or: [{ isActive: true }, { tags: 'admin' }] 
+});
+
+// Check if two queries are equivalent
+const query1 = { age: { $gte: 18 } };
+const query2 = { age: { $gte: 18 } };
+const areEqual = areQueriesEqual(query1, query2); // true
+
+// Check if a key is a MongoDB operator
+const isOp = isOperatorKey('$gte'); // true
+const isField = isOperatorKey('age'); // false
+
+// Merge operator bags
+const merged = mergeOpsBags(
+  { $gte: 18 }, 
+  { $lte: 65 }
+); // { $gte: 18, $lte: 65 }
+
+// Normalize equality values
+const normalized = normalizeEquality('value'); // { $eq: 'value' }
+
+// Convert predicates to operator bag
+const bag = bagFromPreds([
+  { path: 'age', op: '$gte', value: 18 },
+  { path: 'age', op: '$lte', value: 65 }
+]); // { $gte: 18, $lte: 65 }
+```
+
 ### Supported Operators
 
 #### Comparison Operators

@@ -35,7 +35,7 @@ const users: User[] = [
   },
 ];
 
-const queryByName = safeSift<User>({ : "Alice Johnson" });
+const queryByName = safeSift<User>({ name: "Alice Johnson" });
 const result = queryByName.filter(users);
 
 console.log('Users named "Alice Johnson":', result);
