@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.11](https://github.com/tupe12334/safe-sift/compare/1.0.10...1.0.11) (2025-09-01)
+
+
+### Features
+
+* add type tests for getFilterValue and improve documentation ([998d345](https://github.com/tupe12334/safe-sift/commit/998d3455aaa5fc6232e97b826dbf0f135ff5fa9d))
+* enhance safeSift with union type support and add related tests ([7606832](https://github.com/tupe12334/safe-sift/commit/7606832bc544fc46693dc2ea60f6d07379b2fd04))
+
 ## [1.0.10](https://github.com/tupe12334/safe-sift/compare/1.0.9...1.0.10) (2025-09-01)
 
 ## [1.0.9](https://github.com/tupe12334/safe-sift/compare/1.0.8...1.0.9) (2025-09-01)
