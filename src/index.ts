@@ -82,7 +82,7 @@ export type { SafeSiftReturnType } from "./safe-sift-return-type";
 export { QueryBuilder, FieldBuilder, query } from "./query-builder";
 
 // Type definitions for type-safe queries
-export type { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "@types";
+export type { SafeSiftQuery, DeepKeyOf, DeepValueOf } from "./types";
 
 export {
   getFilterOps,
