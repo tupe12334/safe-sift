@@ -1,0 +1,23 @@
+name: linecheck
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install linecheck
+        run: |
+          curl -fsSL -o linecheck.tar.gz \
+            https://github.com/tupe12334/linecheck/releases/download/v1.2.2/linecheck-v1.2.2-x86_64-unknown-linux-gnu.tar.gz
+          tar -xzf linecheck.tar.gz
+          chmod +x linecheck-v1.2.2-x86_64-unknown-linux-gnu/linecheck
+          sudo mv linecheck-v1.2.2-x86_64-unknown-linux-gnu/linecheck /usr/local/bin/linecheck
+
+      - name: Run linecheck
+        run: linecheck .

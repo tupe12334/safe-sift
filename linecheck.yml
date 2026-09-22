@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tupe12334/linecheck/main/schema/linecheck.schema.json
+
+# Starting at warn-only: src/query-builder.ts is already ~1000 lines and
+# hasn't been split yet, so no `error` threshold is set for now. Add
+# `error: 400` once it's been broken up, to make CI actually gate on it.
+rules:
+  - pattern: "src/**/*.ts"
+    warn: 200
+    warn_message: "Consider splitting into smaller modules"
+
+exclude:
+  - "node_modules/**"
+  - "dist/**"
+  - "coverage/**"
+  - "__tests__/**"
+  - "examples/**"
+  - "bench/**"
+  - "showcases/**"
+  - "*.md"
+  - "pnpm-lock.yaml"
