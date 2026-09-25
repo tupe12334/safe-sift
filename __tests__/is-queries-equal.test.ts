@@ -324,4 +324,16 @@ describe("areQueriesEqual", () => {
       expect(areQueriesEqual(query, query)).toBe(true);
     });
   });
+
+  describe("non-plain values", () => {
+    it("should distinguish different RegExp values", () => {
+      expect(areQueriesEqual<any>({ name: { $regex: /abc/ } }, { name: { $regex: /xyz/ } })).toBe(false);
+      expect(areQueriesEqual<any>({ name: { $regex: /abc/i } }, { name: { $regex: /abc/i } })).toBe(true);
+    });
+
+    it("should distinguish different Date values", () => {
+      expect(areQueriesEqual<any>({ d: { $gt: new Date(0) } }, { d: { $gt: new Date(1e12) } })).toBe(false);
+      expect(areQueriesEqual<any>({ d: { $gt: new Date(0) } }, { d: { $gt: new Date(0) } })).toBe(true);
+    });
+  });
 });
