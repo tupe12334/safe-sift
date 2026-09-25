@@ -1,3 +1,4 @@
+import deepEqual from "fast-deep-equal";
 import type { SafeSiftQuery } from "./types";
 
 /**
@@ -32,53 +33,3 @@ export function areQueriesEqual<T>(
   return deepEqual(query1, query2);
 }
 
-/**
- * Performs deep equality comparison between two values.
- * Handles objects, arrays, primitives, and nested structures.
- */
-function deepEqual(a: unknown, b: unknown): boolean {
-  // Same reference or strict equality
-  if (a === b) return true;
-
-  // Null/undefined cases
-  if (a === null || b === null || a === undefined || b === undefined) {
-    return a === b;
-  }
-
-  // Type mismatch
-  if (typeof a !== typeof b) return false;
-
-  // Primitive types
-  if (typeof a !== "object") return a === b;
-
-  // Arrays
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    return a.every((item, index) => deepEqual(item, b[index]));
-  }
-
-  // One is array, other isn't
-  if (Array.isArray(a) || Array.isArray(b)) return false;
-
-  // Objects
-  if (!isObject(a) || !isObject(b)) return false;
-
-  const aKeys = Object.keys(a).sort();
-  const bKeys = Object.keys(b).sort();
-
-  // Different number of properties
-  if (aKeys.length !== bKeys.length) return false;
-
-  // Different property names
-  if (!aKeys.every((key, index) => key === bKeys[index])) return false;
-
-  // Compare property values recursively
-  return aKeys.every((key) => deepEqual(a[key], b[key]));
-}
-
-/**
- * Type guard to check if a value is a plain object.
- */
-function isObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
