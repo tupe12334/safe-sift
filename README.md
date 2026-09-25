@@ -384,6 +384,10 @@ See the `__tests__` directory for comprehensive examples of all supported query 
 
 Contributions are welcome! Please read the contributing guidelines and ensure all tests pass.
 
+## Related projects
+
+- [moadim](https://moadim.io/) — loop engineering: build, schedule & run agent loops.
+
 ## License
 
 MIT
